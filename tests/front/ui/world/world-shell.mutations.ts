@@ -10,6 +10,7 @@ export type WorldShellMutation = Readonly<{
 }>;
 
 const SHELL = 'src/sections/world/world-shell.client.tsx';
+const BOUNDARY = 'src/sections/world/world-error-boundary.client.tsx';
 const LOADER = 'src/sections/world/loader.client.tsx';
 const CONTROLS = 'src/sections/world/header-controls.client.tsx';
 const NOTICE = 'src/sections/world/notice.client.tsx';
@@ -36,6 +37,57 @@ export const WORLD_SHELL_MUTATIONS: readonly WorldShellMutation[] = [
     replace: '',
     nth: 1,
     caseIds: ['shell.chunk-failed'],
+  },
+  {
+    id: 'hud-chunk-failure-ignored',
+    file: SHELL,
+    find: "          fail('chunk-failed');\n",
+    replace: '',
+    nth: 2,
+    caseIds: ['shell.hud-chunk-failed'],
+  },
+  {
+    id: 'stage-boundary-removed',
+    file: SHELL,
+    find: '          <WorldErrorBoundary reason="renderer-failed">\n            <Stage generation={generation} labels={stationLabels} navTemplate={navTemplate} />\n          </WorldErrorBoundary>\n',
+    replace:
+      '          <Stage generation={generation} labels={stationLabels} navTemplate={navTemplate} />\n',
+    caseIds: ['shell.stage-throws'],
+  },
+  {
+    id: 'hud-boundary-removed',
+    file: SHELL,
+    find: '        <WorldErrorBoundary reason="chunk-failed">\n          <Hud />\n        </WorldErrorBoundary>\n',
+    replace: '        <Hud />\n',
+    caseIds: ['shell.hud-throws'],
+  },
+  {
+    id: 'stage-boundary-wrong-reason',
+    file: SHELL,
+    find: '<WorldErrorBoundary reason="renderer-failed">',
+    replace: '<WorldErrorBoundary reason="timeout">',
+    caseIds: ['shell.stage-throws'],
+  },
+  {
+    id: 'hud-boundary-wrong-reason',
+    file: SHELL,
+    find: '<WorldErrorBoundary reason="chunk-failed">',
+    replace: '<WorldErrorBoundary reason="timeout">',
+    caseIds: ['shell.hud-throws'],
+  },
+  {
+    id: 'boundary-does-not-fail-world',
+    file: BOUNDARY,
+    find: '      return failWorld(state, reason);\n',
+    replace: '      return state;\n',
+    caseIds: ['shell.stage-throws', 'shell.hud-throws'],
+  },
+  {
+    id: 'boundary-keeps-children',
+    file: BOUNDARY,
+    find: 'return { failed: true };',
+    replace: 'return { failed: false };',
+    caseIds: ['shell.stage-throws', 'shell.hud-throws'],
   },
   {
     id: 'stage-unmounts-in-text',

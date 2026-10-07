@@ -14,7 +14,7 @@ import { useMenuFocus } from '@/sections/world/hud/use-menu-focus';
 import type { StationId } from '@/core/world/stations';
 
 const MENU_CLASS =
-  'pixel-edge fixed right-4 top-[calc(4.5rem+env(safe-area-inset-top,0px))] z-30 flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-1 bg-panel p-3 shadow-[inset_0_0_0_2px_var(--color-edge)]';
+  'pixel-edge fixed right-4 top-[calc(4.5rem+env(safe-area-inset-top,0px))] z-30 flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-1 bg-panel p-3 shadow-edge';
 
 const ITEM_CLASS =
   'flex cursor-pointer items-center justify-between gap-3 border-0 bg-transparent px-2.5 py-2 text-left font-pixel text-[0.95rem] text-text hover:bg-menu-hover focus-visible:bg-menu-hover coarse:py-3';

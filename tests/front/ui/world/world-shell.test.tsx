@@ -21,7 +21,7 @@ import { INITIAL_WORLD, worldStore } from '@/core/world/world-store';
 import { LOADER_ESCAPE_MS } from '@/sections/world/boot';
 import { WorldShell, type WorldShellCopy } from '@/sections/world/world-shell.client';
 
-import type { WorldSnapshot } from '@/core/world/world.types';
+import type { WorldFailReason, WorldSnapshot } from '@/core/world/world.types';
 import type { WorldStageProps } from '@/scene/scene-loader.client';
 import type { WorldData, WorldRequest } from '@/scene/world/world.types';
 
@@ -30,6 +30,7 @@ const mocks = vi.hoisted(() => {
     startWorldGeneration:
       vi.fn<(request: WorldRequest, onProgress: (value: number) => void) => Promise<WorldData>>(),
     loadWorldStage: vi.fn<() => Promise<ComponentType<WorldStageProps>>>(),
+    hud: { throwOnRender: false },
   };
 });
 
@@ -45,6 +46,10 @@ vi.mock('@/sections/world/hud/world-hud.client', async () => {
 
   return {
     WorldHud: (): ReactNode => {
+      if (mocks.hud.throwOnRender) {
+        throw new Error('hud-render');
+      }
+
       return createElement('div', { 'data-fake-hud': '' });
     },
   };
@@ -82,6 +87,10 @@ const FakeStage = (props: WorldStageProps): ReactNode => {
   return <div data-fake-stage="" />;
 };
 
+const ThrowingStage = (): ReactNode => {
+  throw new Error('stage-render');
+};
+
 const realNow = performance.now.bind(performance);
 
 let generation: PromiseWithResolvers<WorldData>;
@@ -112,6 +121,7 @@ const state = (): WorldSnapshot => {
 
 beforeEach(() => {
   events = [];
+  mocks.hud.throwOnRender = false;
   stageLog.mounts = 0;
   stageLog.unmounts = 0;
   stageLog.props = null;
@@ -618,6 +628,30 @@ caseTest('shell.chunk-failed', 'a rejected stage chunk falls back', async () => 
   expect(state().boot).toEqual({ status: 'failed', reason: 'chunk-failed' });
   expect(state().view).toBe('text');
   expect(textEvents()).toEqual([{ name: 'text_version_opened', source: 'fallback' }]);
+});
+
+const expectTextFallback = (reason: WorldFailReason): void => {
+  expect(state().boot).toEqual({ status: 'failed', reason });
+  expect(state().view).toBe('text');
+  expect(isDisplayed(document.querySelector('main#text'))).toBe(true);
+  expect(document.querySelector('main#text [data-station="home-base"]')).not.toBeNull();
+};
+
+caseTest('shell.stage-throws', 'a throwing stage falls back to text', async () => {
+  const screen = await renderLoading();
+
+  stageChunk.resolve(ThrowingStage);
+  await expect.element(screen.getByText(WORLD_COPY.notices.failed)).toBeVisible();
+  expectTextFallback('renderer-failed');
+});
+
+caseTest('shell.hud-throws', 'a throwing HUD falls back to text', async () => {
+  mocks.hud.throwOnRender = true;
+
+  const screen = await renderLoading();
+
+  await expect.element(screen.getByText(WORLD_COPY.notices.failed)).toBeVisible();
+  expectTextFallback('chunk-failed');
 });
 
 caseTest('shell.worker-failed', 'a failed generation falls back', async () => {

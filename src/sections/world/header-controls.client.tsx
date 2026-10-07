@@ -16,7 +16,7 @@ type HeaderControlsProps = Readonly<{ copy: WorldCopy['header'] }>;
 type Controls = 'none' | 'text' | 'world';
 
 const HEADER_BUTTON =
-  'pixel-edge inline-flex h-9.5 cursor-pointer items-center gap-2 border-0 bg-panel px-3.5 font-pixel text-[0.95rem] text-text shadow-[inset_0_0_0_2px_var(--color-edge-dim)] transition-[box-shadow,color] duration-140 hover:text-white hover:shadow-[inset_0_0_0_2px_var(--color-edge)] aria-expanded:text-white aria-expanded:shadow-[inset_0_0_0_2px_var(--color-edge)] aria-pressed:text-white aria-pressed:shadow-[inset_0_0_0_2px_var(--color-edge)] max-wide:px-2.5 coarse:h-11 coarse:min-w-11';
+  'pixel-edge inline-flex h-9.5 cursor-pointer items-center gap-2 border-0 bg-panel px-3.5 font-pixel text-[0.95rem] text-text shadow-edge-dim transition-[box-shadow,color] duration-140 hover:text-white hover:shadow-edge aria-expanded:text-white aria-expanded:shadow-edge aria-pressed:text-white aria-pressed:shadow-edge max-wide:px-2.5 coarse:h-11 coarse:min-w-11';
 
 const LABEL = 'max-wide:sr-only';
 

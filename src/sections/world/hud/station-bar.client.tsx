@@ -47,7 +47,7 @@ export const StationBar = (): ReactNode => {
             >
               <span
                 aria-hidden="true"
-                className={`absolute inset-0 origin-left bg-signal transition-transform duration-300 ${visited.includes(id) ? 'scale-x-100' : 'scale-x-0'}`}
+                className={`absolute inset-0 origin-left bg-signal ${visited.includes(id) ? 'scale-x-100' : 'scale-x-0'}`}
               />
             </button>
           );

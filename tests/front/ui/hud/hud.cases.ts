@@ -225,14 +225,15 @@ export const HUD_CASES = [
   {
     id: 'hud.flash.take-off',
     source: 'owner-2026-10-07',
-    reference: 'plan 0002 §6.3 (flash take-off 0.6 / 900 ms)',
+    reference: 'plan 0002 §6.3 (flash take-off 0.6 / 900 ms); docs/prototype/index.html:625',
     expected:
       'with motion allowed the flash starts at opacity 0.6 and fades with «opacity 900ms ease-out»',
   },
   {
     id: 'hud.flash.send',
     source: 'owner-2026-10-07',
-    reference: 'plan 0002 §6.3 (flash send 0.5 / 700 ms); spec FR-038',
+    reference:
+      'plan 0002 §6.3 (flash send 0.5 / 700 ms); spec FR-038; docs/prototype/index.html:625',
     expected: 'a send flash starts at opacity 0.5 and fades with «opacity 700ms ease-out»',
   },
   {

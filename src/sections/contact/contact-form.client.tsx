@@ -35,6 +35,16 @@ const loadSchema = () => {
   return import('@/sections/contact/contact.schema');
 };
 
+const loadValidator = async () => {
+  try {
+    const [schema, zod] = await Promise.all([loadSchema(), import('zod/mini')]);
+
+    return { z: zod, ...schema };
+  } catch {
+    return null;
+  }
+};
+
 const readText = (formData: FormData, name: string): string => {
   const value: FormDataEntryValue | null = formData.get(name);
 
@@ -75,6 +85,7 @@ export const ContactForm = ({ action, copy }: ContactFormProps) => {
   const [clientErrors, setClientErrors] = useState<ContactFieldErrors | null>(null);
   const handledState = useRef<ContactFormState>(IDLE_STATE);
   const formRef = useRef<HTMLFormElement>(null);
+  const validating = useRef<boolean>(false);
 
   useEffect(() => {
     const timer: number = window.setTimeout(() => {
@@ -115,41 +126,57 @@ export const ContactForm = ({ action, copy }: ContactFormProps) => {
   }, [state]);
 
   const warmSchema = (): void => {
-    void loadSchema();
+    void loadValidator();
+  };
+
+  const submitToServer = (formData: FormData): void => {
+    setClientErrors(null);
+
+    startTransition(() => {
+      formAction(formData);
+    });
   };
 
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
-
-    const { z, contactSchema, fieldErrorsOf } = await loadSchema().then(async (schema) => {
-      const zod = await import('zod/mini');
-
-      return { z: zod, ...schema };
-    });
-
-    const result = z.safeParse(contactSchema, {
-      name: readText(formData, 'name'),
-      email: readText(formData, 'email'),
-      message: readText(formData, 'message'),
-      website: readText(formData, 'website'),
-    });
-
-    if (result.success) {
-      setClientErrors(null);
-
-      startTransition(() => {
-        formAction(formData);
-      });
-
+    if (validating.current) {
       return;
     }
 
-    const errors: ContactFieldErrors = fieldErrorsOf(result.error);
+    validating.current = true;
 
-    setClientErrors(errors);
-    focusFirstInvalid(errors);
+    const formData = new FormData(event.currentTarget);
+
+    try {
+      const loaded = await loadValidator();
+
+      if (loaded === null) {
+        submitToServer(formData);
+
+        return;
+      }
+
+      const result = loaded.z.safeParse(loaded.contactSchema, {
+        name: readText(formData, 'name'),
+        email: readText(formData, 'email'),
+        message: readText(formData, 'message'),
+        website: readText(formData, 'website'),
+      });
+
+      if (result.success) {
+        submitToServer(formData);
+
+        return;
+      }
+
+      const errors: ContactFieldErrors = loaded.fieldErrorsOf(result.error);
+
+      setClientErrors(errors);
+      focusFirstInvalid(errors);
+    } finally {
+      validating.current = false;
+    }
   };
 
   const shownErrors: ContactFieldErrors =

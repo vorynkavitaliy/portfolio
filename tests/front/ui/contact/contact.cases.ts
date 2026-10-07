@@ -61,6 +61,20 @@ export const CONTACT_CASES = [
     expected: 'while the action is pending the submit button reads «Sending…» and is disabled',
   },
   {
+    id: 'contact-form.schema-load-failed',
+    source: 'spec',
+    reference:
+      'FR-048 (a valid submission sends one email); constitution §2.2 (a failed enhancement never blocks the form; the server validates)',
+    expected:
+      'when the client schema chunk fails to load, submit still calls the action once with the typed values',
+  },
+  {
+    id: 'contact-form.double-submit',
+    source: 'spec',
+    reference: 'FR-048 (one submission sends one email)',
+    expected: 'two submit events while the schema is loading call the action once',
+  },
+  {
     id: 'contact-form.sent',
     source: 'spec',
     reference: 'plan S20: sent → success status, celebrate-send, contact_sent',

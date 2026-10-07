@@ -24,6 +24,7 @@ import {
 import { HeaderControls } from '@/sections/world/header-controls.client';
 import { Loader } from '@/sections/world/loader.client';
 import { Notice } from '@/sections/world/notice.client';
+import { WorldErrorBoundary } from '@/sections/world/world-error-boundary.client';
 import { StationLink } from '@/shared/station-link.client';
 
 import type { WorldCopy } from '@/content/content.types';
@@ -191,7 +192,7 @@ export const WorldShell = ({
 
   return (
     <div data-view={view} data-boot={bootStatus}>
-      <header className="pointer-events-none fixed inset-x-4 top-[calc(16px+env(safe-area-inset-top,0px))] z-20 flex items-center justify-between gap-2 *:pointer-events-auto">
+      <header className="pointer-events-none fixed inset-x-4 top-4 z-20 flex items-center justify-between gap-2 pt-[env(safe-area-inset-top,0px)] *:pointer-events-auto">
         <StationLink
           station="home-base"
           className="font-pixel text-[1.125rem] font-semibold tracking-[0.04em] text-text no-underline [text-shadow:0_2px_0_var(--color-shadow)]"
@@ -212,11 +213,17 @@ export const WorldShell = ({
 
       {Stage !== null && generation !== null && bootStatus !== 'failed' ? (
         <div className="hidden world:block">
-          <Stage generation={generation} labels={stationLabels} navTemplate={navTemplate} />
+          <WorldErrorBoundary reason="renderer-failed">
+            <Stage generation={generation} labels={stationLabels} navTemplate={navTemplate} />
+          </WorldErrorBoundary>
         </div>
       ) : null}
 
-      {Hud !== null && view === 'world' && bootStatus !== 'failed' ? <Hud /> : null}
+      {Hud !== null && view === 'world' && bootStatus !== 'failed' ? (
+        <WorldErrorBoundary reason="chunk-failed">
+          <Hud />
+        </WorldErrorBoundary>
+      ) : null}
     </div>
   );
 };

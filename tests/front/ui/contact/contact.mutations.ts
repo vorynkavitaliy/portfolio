@@ -14,6 +14,20 @@ const COPY = 'src/sections/contact/copy-email.client.tsx';
 
 export const CONTACT_MUTATIONS: readonly ContactMutation[] = [
   {
+    id: 'schema-load-failure-propagates',
+    file: FORM,
+    find: '  } catch {\n    return null;\n  }\n',
+    replace: '  } catch (error) {\n    throw error;\n  }\n',
+    caseIds: ['contact-form.schema-load-failed'],
+  },
+  {
+    id: 'submit-guard-removed',
+    file: FORM,
+    find: '    if (validating.current) {\n      return;\n    }\n\n',
+    replace: '',
+    caseIds: ['contact-form.double-submit'],
+  },
+  {
     id: 'name-limit-dropped',
     file: FORM,
     find: '            maxLength={CONTACT_LIMITS.name}\n',

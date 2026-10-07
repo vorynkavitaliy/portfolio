@@ -3,7 +3,10 @@
 import { expect, test } from 'vitest';
 
 import { CONTACT_CASES } from '@tests/front/ui/contact/contact.cases';
-import source from '@tests/front/ui/contact/contact.test.tsx?raw';
+import schemaChunkSource from '@tests/front/ui/contact/contact-schema-chunk.test.tsx?raw';
+import formSource from '@tests/front/ui/contact/contact.test.tsx?raw';
+
+const source: string = `${formSource}\n${schemaChunkSource}`;
 
 const ALLOWED_SOURCES: readonly string[] = [
   'spec',

@@ -229,6 +229,21 @@ caseTest('contact-form.pending', 'sending label and disabled', async () => {
     .toBeEnabled();
 });
 
+caseTest('contact-form.double-submit', 'two submits send once', async () => {
+  const action = answering({ status: 'idle' });
+  const form = await mountForm(action);
+
+  await fillValid(form);
+
+  const element = form.screen.container.querySelector('form');
+
+  expect(element).not.toBeNull();
+  element?.requestSubmit();
+  element?.requestSubmit();
+  await settle();
+  expect(action).toHaveBeenCalledTimes(1);
+});
+
 caseTest('contact-form.sent', 'success status, celebration, tracking', async () => {
   const form = await mountForm(answering({ status: 'sent' }));
 

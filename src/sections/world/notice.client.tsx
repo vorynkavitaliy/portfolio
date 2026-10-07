@@ -31,7 +31,7 @@ export const Notice = ({ copy }: NoticeProps): ReactNode => {
   return (
     <div role="status" data-notice="" className="empty:sr-only">
       {message === null ? null : (
-        <p className="m-0 bg-panel px-4 py-3 font-pixel text-signal shadow-[inset_0_0_0_2px_var(--color-signal)] pixel-edge">
+        <p className="m-0 bg-panel px-4 py-3 font-pixel text-signal shadow-outline-signal pixel-edge">
           {message}
         </p>
       )}

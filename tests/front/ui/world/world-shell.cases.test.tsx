@@ -3,7 +3,10 @@
 import { expect, test } from 'vitest';
 
 import { WORLD_SHELL_CASES } from '@tests/front/ui/world/world-shell.cases';
-import source from '@tests/front/ui/world/world-shell.test.tsx?raw';
+import hudChunkSource from '@tests/front/ui/world/world-shell-hud-chunk.test.tsx?raw';
+import shellSource from '@tests/front/ui/world/world-shell.test.tsx?raw';
+
+const source: string = `${shellSource}\n${hudChunkSource}`;
 
 const ALLOWED_SOURCES: readonly string[] = ['spec', 'owner-2026-10-07', 'prototype', 'apg'];
 

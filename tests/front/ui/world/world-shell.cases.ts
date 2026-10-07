@@ -167,6 +167,27 @@ export const WORLD_SHELL_CASES = [
       'stage chunk rejects → boot failed chunk-failed, view text, failure notice, one fallback event',
   },
   {
+    id: 'shell.hud-chunk-failed',
+    source: 'spec',
+    reference: FAILURES,
+    expected:
+      'HUD chunk rejects → boot failed chunk-failed, view text, failure notice, main#text displayed',
+  },
+  {
+    id: 'shell.stage-throws',
+    source: 'spec',
+    reference: `${FAILURES}; constitution §2.2 (3D never holds content hostage)`,
+    expected:
+      'the stage throws while rendering → boot failed renderer-failed, view text, failure notice, main#text with the children still displayed',
+  },
+  {
+    id: 'shell.hud-throws',
+    source: 'spec',
+    reference: `${FAILURES}; constitution §2.2 (3D never holds content hostage)`,
+    expected:
+      'the HUD throws while rendering → boot failed chunk-failed, view text, failure notice, main#text with the children still displayed',
+  },
+  {
     id: 'shell.worker-failed',
     source: 'spec',
     reference: FAILURES,

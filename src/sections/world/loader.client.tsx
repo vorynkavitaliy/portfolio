@@ -20,7 +20,7 @@ const CELLS: readonly number[] = Array.from({ length: LOADER_CELLS }, (_, index)
 });
 
 const TAKE_OFF_CLASS =
-  'pixel-edge inline-flex h-11 cursor-pointer items-center justify-center border-0 bg-signal px-5 font-pixel text-[1.05rem] text-on-signal shadow-[inset_0_-4px_0_rgb(0_0_0/0.28)] transition hover:brightness-105 active:translate-y-0.5 disabled:cursor-progress disabled:opacity-45';
+  'pixel-edge inline-flex h-11 cursor-pointer items-center justify-center border-0 bg-signal px-5 font-pixel text-[1.05rem] text-on-signal shadow-btn-signal transition duration-140 hover:brightness-105 active:translate-y-0.5 disabled:cursor-progress disabled:opacity-45';
 
 const focusIsFree = (): boolean => {
   return document.activeElement === null || document.activeElement === document.body;
@@ -80,7 +80,7 @@ export const Loader = ({ copy }: LoaderProps): ReactNode => {
       data-loader=""
       className="loader fixed inset-0 z-40 grid place-items-center bg-[radial-gradient(120%_90%_at_50%_100%,var(--color-loader-top)_0%,var(--color-loader-bottom)_60%)] p-6"
     >
-      <div className="grid w-[min(560px,100%)] justify-items-center gap-4.5 text-center">
+      <div className="grid w-full max-w-[var(--max-w-loader)] justify-items-center gap-4.5 text-center">
         <p className="m-0 font-pixel text-[clamp(2rem,7vw,3.4rem)] leading-none tracking-[0.02em] text-white [text-shadow:0_4px_0_var(--color-shadow)]">
           {copy.name}
         </p>
@@ -89,7 +89,7 @@ export const Loader = ({ copy }: LoaderProps): ReactNode => {
 
         <div
           aria-hidden="true"
-          className="grid w-full grid-cols-16 gap-0.75 bg-field p-1.25 shadow-[inset_0_0_0_2px_var(--color-edge-dim)] pixel-edge"
+          className="grid w-full grid-cols-16 gap-0.75 bg-field p-1.25 shadow-edge-dim pixel-edge"
         >
           {CELLS.map((index) => {
             const on: boolean = index < lit;

@@ -72,6 +72,8 @@
   --shadow-btn-signal: inset 0 -4px 0 rgb(0 0 0 / 0.28);
   --shadow-btn-plain: inset 0 0 0 2px var(--color-edge-dim), inset 0 -4px 0 rgb(0 0 0 / 0.3);
   --shadow-btn-plain-hover: inset 0 0 0 2px var(--color-edge), inset 0 -4px 0 rgb(0 0 0 / 0.3);
+  --shadow-edge: inset 0 0 0 2px var(--color-edge);
+  --shadow-edge-dim: inset 0 0 0 2px var(--color-edge-dim);
 
   --ease-panel: cubic-bezier(0.22, 1, 0.36, 1);
 
@@ -80,6 +82,8 @@
   --spacing-dock-bottom: 96px;
   --spacing-sheet-x: 12px;
   --spacing-sheet-bottom: 64px;
+
+  --max-w-loader: 560px;
 }
 
 @theme inline {
@@ -261,7 +265,7 @@
     opacity: 0;
   }
 
-  .nav-layer[data-on] {
+  .nav-layer[data-on='true'] {
     opacity: 1;
   }
 
@@ -430,7 +434,7 @@
     background: var(--color-field);
     color: var(--color-white);
     font: inherit;
-    font-size: 0.95rem;
+    font-size: 1rem;
     box-shadow: inset 0 0 0 2px var(--color-edge-dim);
   }
 

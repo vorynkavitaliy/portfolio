@@ -9,7 +9,7 @@ import { openText } from '@/core/world/world-actions';
 import { worldStore } from '@/core/world/world-store';
 
 const BUTTON_CLASS =
-  'pixel-edge cursor-pointer border-0 bg-surface px-3 py-1.5 font-pixel text-[0.9rem] text-text shadow-[inset_0_0_0_2px_var(--color-edge-dim)] hover:text-white coarse:py-3';
+  'pixel-edge cursor-pointer border-0 bg-surface px-3 py-1.5 font-pixel text-[0.9rem] text-text shadow-edge-dim hover:text-white coarse:py-3';
 
 const openTextVersion = (): void => {
   worldStore.update((state) => {
@@ -35,7 +35,7 @@ export const SlowPrompt = (): ReactNode => {
       role="region"
       aria-label={WORLD_COPY.slowPrompt.text}
       data-slow-prompt=""
-      className="fixed inset-x-4 top-[calc(4.5rem+env(safe-area-inset-top,0px))] z-30 mx-auto flex max-w-md flex-col gap-3 bg-panel p-3 shadow-[inset_0_0_0_2px_var(--color-signal)] pixel-edge"
+      className="fixed inset-x-4 top-[calc(4.5rem+env(safe-area-inset-top,0px))] z-30 mx-auto flex max-w-md flex-col gap-3 bg-panel p-3 shadow-outline-signal pixel-edge"
     >
       <p className="m-0 font-pixel text-[0.95rem] text-text">{WORLD_COPY.slowPrompt.text}</p>
 

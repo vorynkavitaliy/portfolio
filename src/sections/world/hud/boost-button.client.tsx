@@ -43,7 +43,7 @@ export const BoostButton = (): ReactNode => {
       onPointerUp={release}
       onPointerCancel={release}
       onPointerLeave={release}
-      className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] z-10 hidden h-14 min-w-24 touch-none items-center justify-center border-0 bg-signal px-4 font-pixel text-[1.05rem] text-on-signal shadow-[inset_0_-4px_0_rgb(0_0_0/0.28)] select-none pixel-edge active:translate-y-0.5 coarse:inline-flex"
+      className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] z-10 hidden h-14 min-w-24 touch-none items-center justify-center border-0 bg-signal px-4 font-pixel text-[1.05rem] text-on-signal shadow-btn-signal select-none pixel-edge active:translate-y-0.5 coarse:inline-flex"
     >
       {WORLD_COPY.hud.boost}
     </button>

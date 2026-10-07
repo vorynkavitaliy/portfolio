@@ -11,7 +11,7 @@ import { MAP_REFRESH_MS, MAP_SIZE } from '@/sections/world/hud/hud.constants';
 import { useMenuFocus } from '@/sections/world/hud/use-menu-focus';
 
 const MAP_CLASS =
-  'pixel-edge fixed right-4 top-[calc(4.5rem+env(safe-area-inset-top,0px))] z-30 flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-2 bg-panel p-3 shadow-[inset_0_0_0_2px_var(--color-edge)] focus:outline-none';
+  'pixel-edge fixed right-4 top-[calc(4.5rem+env(safe-area-inset-top,0px))] z-30 flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-2 bg-panel p-3 shadow-edge';
 
 const drawMap = (canvas: HTMLCanvasElement | null): void => {
   if (canvas !== null) {

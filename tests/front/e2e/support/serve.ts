@@ -1,4 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { serverEnvFor } from '@tests/front/e2e/support/e2e-env';
@@ -21,10 +22,15 @@ const env: NodeJS.ProcessEnv = {
   NEXT_TELEMETRY_DISABLED: '1',
 };
 
-const build = spawnSync(NEXT_BIN, ['build'], { env, stdio: ['ignore', 'ignore', 'inherit'] });
+const reuseBuild: boolean =
+  process.env['E2E_SKIP_BUILD'] === '1' && existsSync(join(process.cwd(), '.next', 'BUILD_ID'));
 
-if (build.status !== 0) {
-  process.exit(build.status ?? 1);
+if (!reuseBuild) {
+  const build = spawnSync(NEXT_BIN, ['build'], { env, stdio: ['ignore', 'ignore', 'inherit'] });
+
+  if (build.status !== 0) {
+    process.exit(build.status ?? 1);
+  }
 }
 
 const server: ChildProcess = spawn(NEXT_BIN, ['start', '-p', port, '-H', 'localhost'], {
