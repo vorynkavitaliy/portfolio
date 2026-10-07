@@ -60,7 +60,7 @@ export const MissionBrief = ({ station }: MissionBriefProps) => {
         data-motion="result"
         className="mt-4 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 bg-result-bg px-3 py-2.5 shadow-result"
       >
-        <b className="font-pixel font-normal text-signal text-stat-value">{copy.result.value}</b>
+        <b className="font-pixel text-stat-value font-normal text-signal">{copy.result.value}</b>
 
         <span className="text-base text-result-text">{copy.result.caption}</span>
       </p>

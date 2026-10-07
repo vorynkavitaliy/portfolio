@@ -288,7 +288,7 @@ caseTest('shell.ssr.boot', 'server render is the boot state', () => {
   expect(root?.getAttribute('data-boot')).toBe('idle');
   expect(page.querySelector('main#text [data-station="home-base"]')).not.toBeNull();
 
-  const loader = page.querySelector('div.loader[data-loader]');
+  const loader = page.querySelector('section.loader[data-loader]');
 
   expect(loader?.textContent).toContain(WORLD_COPY.loader.name);
   expect(loader?.textContent).toContain(WORLD_COPY.loader.line);

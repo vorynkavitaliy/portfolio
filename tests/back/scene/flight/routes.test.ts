@@ -28,7 +28,9 @@ import {
   stationOf,
   waterSpot,
 } from '@tests/back/scene/flight/routes.fixtures';
-import { BOOST_SPEED, CEILING, CRUISE_SPEED } from '@/scene/flight/flight.constants';
+import { applyDockingCommand, createDocking, dockPoint } from '@/scene/flight/docking';
+import { BOOST_SPEED, CEILING, CRUISE_SPEED, LINK_RANGE } from '@/scene/flight/flight.constants';
+import { createPlane, placeOnOrbit } from '@/scene/flight/plane';
 
 import type { RealMap, Sim, Spot } from '@tests/back/scene/flight/routes.fixtures';
 
@@ -88,6 +90,54 @@ const leaveHome = (map: RealMap): Sim => {
   issue(map, sim, { type: 'take-off' });
 
   return sim;
+};
+
+const TAKEOFF_QUIET_SECONDS = 2;
+const DOCK_CLEAR_MARGIN = 2;
+
+const APPROACHES: readonly number[] = Array.from({ length: 16 }, (_, step) => {
+  return (step * Math.PI) / 8;
+});
+
+const hoverFiveSeconds = (map: RealMap, sim: Sim): Sim => {
+  for (let frame = 0; frame < 5 * 60; frame += 1) {
+    advance(map, sim, NO_KEYS);
+  }
+
+  resetCounters(sim);
+
+  return sim;
+};
+
+const homeAfterIntro = (map: RealMap, theta: number): Sim => {
+  const plane = createPlane();
+  const docking = createDocking();
+
+  placeOnOrbit(plane, stationOf(map, HOME), theta);
+  applyDockingCommand(docking, { type: 'intro-done' }, plane, map.stations, map.terrain);
+
+  return hoverFiveSeconds(map, {
+    plane,
+    docking,
+    frames: 0,
+    lowestMargin: Infinity,
+    highest: -Infinity,
+    events: [],
+    docks: true,
+  });
+};
+
+const quietAfterTakeOff = (
+  map: RealMap,
+  sim: Sim,
+): Readonly<{ docked: readonly number[]; mode: string }> => {
+  issue(map, sim, { type: 'take-off' });
+
+  for (let frame = 0; frame < TAKEOFF_QUIET_SECONDS * 60; frame += 1) {
+    advance(map, sim, NO_KEYS);
+  }
+
+  return { docked: dockedStations(sim), mode: sim.docking.mode.kind };
 };
 
 const edgeStarts = (map: RealMap): readonly Readonly<{ x: number; z: number }>[] => {
@@ -346,6 +396,55 @@ caseTest('routes.edge.floor', 'edge-return runs keep the floor and the ceiling',
         expect(run.margin).toBeGreaterThanOrEqual(FLOOR_MARGIN);
         expect(run.highest).toBeLessThanOrEqual(CEILING);
       }
+    }
+  }
+});
+
+caseTest('routes.takeoff.no-redock', 'take-off leaves the plane free for 2 s of cruise', () => {
+  const map = realMap();
+
+  for (const theta of APPROACHES) {
+    expect({ theta, ...quietAfterTakeOff(map, homeAfterIntro(map, theta)) }).toEqual({
+      theta,
+      docked: [],
+      mode: 'free',
+    });
+
+    for (let station = 0; station < STATION_COUNT; station += 1) {
+      expect({
+        station,
+        theta,
+        ...quietAfterTakeOff(map, startDocked(map, station, theta)),
+      }).toEqual({ station, theta, docked: [], mode: 'free' });
+    }
+  }
+});
+
+caseTest('routes.dock-point.clear', 'no hover point lies in link range of another station', () => {
+  const map = realMap();
+  const plane = createPlane();
+
+  for (let station = 0; station < STATION_COUNT; station += 1) {
+    for (const theta of APPROACHES) {
+      placeOnOrbit(plane, stationOf(map, station), theta);
+
+      const dock = dockPoint(station, map.stations, plane, map.terrain);
+
+      map.stations.forEach((other, index) => {
+        if (index !== station) {
+          expect({
+            station,
+            theta,
+            index,
+            far: horizontal(dock, other) >= LINK_RANGE + DOCK_CLEAR_MARGIN,
+          }).toEqual({
+            station,
+            theta,
+            index,
+            far: true,
+          });
+        }
+      });
     }
   }
 });

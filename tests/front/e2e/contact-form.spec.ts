@@ -37,12 +37,24 @@ const freshToken = (): string => {
   return `tk${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 };
 
-const test = base.extend<{ clientIp: string }>({
+const test = base.extend<{ clientIp: string; pageWithClipboard: Page }>({
   clientIp: async ({}, provide) => {
     await provide(freshIp());
   },
   extraHTTPHeaders: async ({ clientIp }, provide) => {
     await provide({ [CLIENT_IP_HEADER]: clientIp });
+  },
+  pageWithClipboard: async ({ browser }, provide, info) => {
+    const shouldSkip = info.project.name !== 'desktop-1440';
+    test.skip(shouldSkip, 'clipboard permission only supported on desktop chromium');
+
+    const context = await browser.newContext({
+      permissions: ['clipboard-read', 'clipboard-write'],
+    });
+
+    const page = await context.newPage();
+    await provide(page);
+    await context.close();
   },
 });
 
@@ -396,12 +408,10 @@ test('sec.contact.fill-time: a submit under 3 s after hydration shows success an
 });
 
 test.describe('copy email', () => {
-  test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
-
   test('sec.contact.copy: the button reads Copied, reverts, and tracks email_copy once', async ({
-    page,
-  }, info) => {
-    onlyDesktop(info);
+    pageWithClipboard,
+  }) => {
+    const page = pageWithClipboard;
 
     await collectAnalytics(page);
     await openForm(page);

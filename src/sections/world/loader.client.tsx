@@ -76,7 +76,8 @@ export const Loader = ({ copy }: LoaderProps): ReactNode => {
   };
 
   return (
-    <div
+    <section
+      aria-label={copy.name}
       data-loader=""
       className="loader fixed inset-0 z-40 grid place-items-center bg-[radial-gradient(120%_90%_at_50%_100%,var(--color-loader-top)_0%,var(--color-loader-bottom)_60%)] p-6"
     >
@@ -127,6 +128,6 @@ export const Loader = ({ copy }: LoaderProps): ReactNode => {
           {copy.textLink}
         </a>
       </div>
-    </div>
+    </section>
   );
 };

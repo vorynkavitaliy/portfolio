@@ -33,6 +33,7 @@ export type DockingState = {
   mode: FlightMode;
   orbitSide: 1 | -1;
   cooldown: number;
+  takeOff: Vec3 | null;
   visited: number;
   introDone: boolean;
 };

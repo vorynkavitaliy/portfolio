@@ -4,6 +4,7 @@ import {
   announcer,
   autopilotCell,
   bootToHome,
+  flyAway,
   headerButton,
   skipOutsideWorldProject,
 } from '@tests/front/e2e/support/routes';
@@ -43,6 +44,7 @@ test('hud.undock-space-body: Space and Esc on the body undock', async ({ page })
 
   await page.locator('body').press('Space');
   await expect(page.locator('section[data-station][data-docked]')).toHaveCount(0);
+  await flyAway(page);
 
   await autopilotCell(page, 'home-base');
   await page.locator('body').press('Escape');

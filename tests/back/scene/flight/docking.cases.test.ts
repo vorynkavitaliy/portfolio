@@ -4,7 +4,7 @@ import { expect, test } from 'vitest';
 
 import { DOCKING_CASES } from '@tests/back/scene/flight/docking.cases';
 
-const ALLOWED_SOURCES: readonly string[] = ['prototype', 'spec', 'scene-rule'];
+const ALLOWED_SOURCES: readonly string[] = ['prototype', 'spec', 'scene-rule', 'owner-2026-10-07'];
 
 const TEST_FILE = 'tests/back/scene/flight/docking.test.ts';
 

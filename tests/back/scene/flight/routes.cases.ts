@@ -77,6 +77,22 @@ export const ROUTES_CASES = [
     reference: `${SC007}; edge-return runs over the real map`,
     expected: 'the surface margin stays ≥ 2.5 and y ≤ 80 in every edge-return run',
   },
+  {
+    id: 'routes.takeoff.no-redock',
+    source: 'owner-2026-10-07',
+    reference:
+      'orchestrator: take-off must leave the plane free; prototype re-docked a neighbour; spec FR-022 / FR-025 / FR-026; real map, 16 approach bearings, Home also via intro-done, 1/60',
+    expected:
+      'after a 5 s hover and take-off from every station, 2 s of cruise without input gives no docked event and mode stays free',
+  },
+  {
+    id: 'routes.dock-point.clear',
+    source: 'owner-2026-10-07',
+    reference:
+      'orchestrator: take-off must leave the plane free; prototype re-docked a neighbour; spec FR-022; real map, 16 approach bearings on the orbit',
+    expected:
+      'every hover point of the 9 stations is ≥ LINK_RANGE + 2 (17) horizontally from every other station',
+  },
 ] as const satisfies readonly RoutesCase[];
 
 export type RoutesCaseId = (typeof ROUTES_CASES)[number]['id'];

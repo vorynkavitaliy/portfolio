@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 
+import { WORLD_COPY } from '@/content/world.content';
 import { useWorld } from '@/core/world/use-world';
 import { AutopilotMenu } from '@/sections/world/hud/autopilot-menu.client';
 import { BoostButton } from '@/sections/world/hud/boost-button.client';
@@ -21,11 +22,14 @@ const RunningHud = (): ReactNode => {
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-10 flex flex-col items-center gap-2 px-4">
+      <nav
+        aria-label={WORLD_COPY.hud.barLabel}
+        className="pointer-events-none fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-10 flex flex-col items-center gap-2 px-4"
+      >
         <StationBar />
 
         <FlightHint />
-      </div>
+      </nav>
 
       <AutopilotMenu />
 

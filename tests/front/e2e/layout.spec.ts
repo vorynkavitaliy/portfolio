@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-import { expectKnownBug } from '@tests/front/e2e/support/known-bug';
 import {
   WIDE_BREAKPOINT_PX,
   openWorld,
@@ -118,9 +117,7 @@ test(
       viewportHeight * SHEET_MAX_RATIO + SUBPIXEL_PX,
     );
 
-    await expectKnownBug('S25-sheet-overlaps-bar', async () => {
-      expect((panel?.y ?? 0) + (panel?.height ?? 0)).toBeLessThanOrEqual(bar?.y ?? 0);
-    });
+    expect((panel?.y ?? 0) + (panel?.height ?? 0)).toBeLessThanOrEqual(bar?.y ?? 0);
   },
 );
 
@@ -132,14 +129,12 @@ test(caseTitle('layout.mobile.boost-clear', 'Boost sits above the bar'), async (
     .getByRole('button', { name: /take off/i })
     .click();
 
-  await expectKnownBug('S25-redock-after-takeoff', async () => {
-    const boost = await page.locator('[data-boost]').boundingBox({ timeout: 3000 });
-    const bar = await barOf(page).boundingBox();
+  const boost = await page.locator('[data-boost]').boundingBox({ timeout: 3000 });
+  const bar = await barOf(page).boundingBox();
 
-    expect(boost).not.toBeNull();
-    expect(bar).not.toBeNull();
-    expect((boost?.y ?? 0) + (boost?.height ?? 0)).toBeLessThanOrEqual(bar?.y ?? 0);
-  });
+  expect(boost).not.toBeNull();
+  expect(bar).not.toBeNull();
+  expect((boost?.y ?? 0) + (boost?.height ?? 0)).toBeLessThanOrEqual(bar?.y ?? 0);
 });
 
 test(

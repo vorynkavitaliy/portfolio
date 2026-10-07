@@ -117,32 +117,44 @@ const readMarkers = async (canvas: Locator): Promise<MapMarker[]> => {
     const { width, height } = node;
     const data: Uint8ClampedArray = context.getImageData(0, 0, width, height).data;
 
-    const colorAt = (x: number, y: number): string => {
+    const rgbAt = (x: number, y: number): number[] => {
       const at: number = (y * width + x) * 4;
 
-      return `${data[at]},${data[at + 1]},${data[at + 2]}`;
+      return [data[at] ?? 0, data[at + 1] ?? 0, data[at + 2] ?? 0];
     };
 
     const found: MapMarker[] = [];
 
     for (let y = 3; y < height - 3; y += 1) {
       for (let x = 3; x < width - 3; x += 1) {
-        const ring: string[] = [
-          colorAt(x - 2, y),
-          colorAt(x + 2, y),
-          colorAt(x, y - 2),
-          colorAt(x, y + 2),
+        const core: number[] = rgbAt(x, y);
+
+        if (
+          !core.every((c) => {
+            return c < 50;
+          })
+        ) {
+          continue;
+        }
+
+        const ring: number[][] = [
+          rgbAt(x - 2, y),
+          rgbAt(x + 2, y),
+          rgbAt(x, y - 2),
+          rgbAt(x, y + 2),
         ];
 
         const pending: boolean = ring.every((c) => {
-          return c === '255,255,255';
+          return c.every((v) => {
+            return v > 200;
+          });
         });
 
         const lit: boolean = ring.every((c) => {
-          return c === '255,170,0';
+          return (c[0] ?? 0) > 200 && (c[1] ?? 0) > 120 && (c[1] ?? 0) < 210 && (c[2] ?? 0) < 70;
         });
 
-        if (colorAt(x, y) === '0,0,0' && (pending || lit)) {
+        if (pending || lit) {
           found.push({ x: (x + 0.5) / width, y: (y + 0.5) / height, lit });
         }
       }

@@ -15,6 +15,7 @@ const namesOf = (namespace: string): readonly string[] => {
 
 test('theme.tokens.text-namespace: no font-size token shares a name with a colour token', () => {
   const colours: ReadonlySet<string> = new Set(namesOf('color'));
+
   const clashes: readonly string[] = namesOf('text').filter((name) => {
     return colours.has(name);
   });

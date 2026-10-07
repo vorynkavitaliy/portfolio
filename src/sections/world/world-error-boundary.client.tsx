@@ -21,7 +21,7 @@ export class WorldErrorBoundary extends Component<
   override state: WorldErrorBoundaryState = { failed: false };
 
   static getDerivedStateFromError(): WorldErrorBoundaryState {
-    return { failed: false };
+    return { failed: true };
   }
 
   override componentDidCatch(): void {

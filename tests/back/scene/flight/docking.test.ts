@@ -13,13 +13,20 @@ import { controlFor, createControl } from '@/scene/flight/control';
 import {
   applyDockingCommand,
   createDocking,
+  dockPoint,
   resetDocking,
   stepDocking,
 } from '@/scene/flight/docking';
 import { stepPlane } from '@/scene/flight/integrate';
 import { placeOnOrbit } from '@/scene/flight/plane';
 
-import type { DockingEvent, DockingState, PlaneState, Steer } from '@/scene/flight/flight.types';
+import type {
+  DockingEvent,
+  DockingState,
+  PlaneState,
+  Steer,
+  Vec3,
+} from '@/scene/flight/flight.types';
 
 const NO_STEER: Steer = { turn: 0, climb: 0, magnitude: 0, boost: false };
 const FULL_STEER: Steer = { turn: 1, climb: 1, magnitude: Math.SQRT2, boost: true };
@@ -74,6 +81,7 @@ caseTest('docking.create', 'initial docking state', () => {
     mode: { kind: 'intro' },
     orbitSide: 1,
     cooldown: 0,
+    takeOff: null,
     visited: 0,
     introDone: false,
   });
@@ -184,6 +192,69 @@ caseTest('docking.dock-point.degenerate', 'a plane right over the beacon', () =>
   });
 });
 
+const nearestOther = (index: number, stations: readonly Vec3[], point: Readonly<Vec3>): number => {
+  let nearest = Infinity;
+
+  stations.forEach((station, other) => {
+    if (other !== index) {
+      nearest = Math.min(nearest, Math.hypot(station.x - point.x, station.z - point.z));
+    }
+  });
+
+  return nearest;
+};
+
+caseTest('docking.dock-point.neighbour', 'the Home hover point turns away from a neighbour', () => {
+  const plane = planeAt(stationAt(1).x, 30, stationAt(1).z);
+  const dock = dockPoint(0, STATIONS, plane, FLAT);
+
+  expect(dock).toEqual({ x: -24.976842348215516, y: 18, z: 24.537544048612066 });
+  expect(nearestOther(0, STATIONS, dock)).toBeGreaterThanOrEqual(18);
+});
+
+caseTest(
+  'docking.dock-point.neighbour-margin',
+  'a neighbour closer than 18 blocks turns the hover point',
+  () => {
+    const stations: Vec3[] = [
+      { x: -60, y: 11, z: -60 },
+      { x: 0, y: 11, z: 0 },
+      { x: 0, y: 11, z: 27 },
+    ];
+
+    const plane = planeAt(0, 20, 5);
+
+    expect(dockPoint(1, stations, plane, FLAT)).toEqual({
+      x: -7.071067811865475,
+      y: 17,
+      z: 7.0710678118654755,
+    });
+
+    stations[2] = { x: 0, y: 11, z: 28.5 };
+    expect(dockPoint(1, stations, plane, FLAT)).toEqual({ x: 0, y: 17, z: 10 });
+  },
+);
+
+caseTest('docking.dock-point.crowded', 'no clear bearing: the farthest one wins', () => {
+  const stations: Vec3[] = [
+    { x: -60, y: 11, z: -60 },
+    { x: 0, y: 11, z: 0 },
+  ];
+
+  for (let step = 0; step < 8; step += 1) {
+    const angle = (step * Math.PI) / 4;
+    const reach = step === 2 ? 24 : 20;
+
+    stations.push({ x: Math.sin(angle) * reach, y: 11, z: Math.cos(angle) * reach });
+  }
+
+  expect(dockPoint(1, stations, planeAt(0, 20, 5), FLAT)).toEqual({
+    x: 10,
+    y: 17,
+    z: 6.123233995736766e-16,
+  });
+});
+
 caseTest('docking.autopilot.passes-non-target', 'autopilot flies past other beacons', () => {
   const plane = homeOrbit();
   const state = afterIntro(plane);
@@ -230,6 +301,8 @@ caseTest('docking.takeoff', 'take-off returns to free flight', () => {
 
   expect(state.mode).toEqual({ kind: 'free' });
   expect(state.cooldown).toBe(1 << 2);
+  expect(state.takeOff).toEqual(plane.pos);
+  expect(state.takeOff).not.toBe(plane.pos);
 });
 
 caseTest('docking.takeoff.cooldown', 'no re-dock until 24 blocks away', () => {
@@ -267,6 +340,135 @@ caseTest('docking.takeoff.other-stations', 'other stations dock right away', () 
     type: 'docked',
     station: 3,
     firstVisit: true,
+  });
+});
+
+const takenOffNear3 = (): Readonly<{ state: DockingState; plane: PlaneState; from: Vec3 }> => {
+  const { state, plane } = dockedAt(2);
+
+  nearStation(plane, 3, 8);
+  applyDockingCommand(state, { type: 'take-off' }, plane, STATIONS, FLAT);
+
+  return { state, plane, from: { ...plane.pos } };
+};
+
+caseTest(
+  'docking.takeoff.grace',
+  'no station docks until 15 blocks from the take-off point',
+  () => {
+    const { state, plane, from } = takenOffNear3();
+
+    expect(state.takeOff).toEqual(from);
+    expect(stepDocking(state, plane, NO_STEER, STATIONS, FLAT)).toBeNull();
+
+    plane.pos.x = from.x + 14.9;
+    expect(stepDocking(state, plane, NO_STEER, STATIONS, FLAT)).toBeNull();
+    expect(state.mode).toEqual({ kind: 'free' });
+
+    plane.pos.x = from.x + 15;
+
+    expect(stepDocking(state, plane, NO_STEER, STATIONS, FLAT)).toEqual({
+      type: 'docked',
+      station: 3,
+      firstVisit: true,
+    });
+
+    expect(state.takeOff).toBeNull();
+  },
+);
+
+caseTest('docking.takeoff.grace.released', 'once 15 blocks away the grace is over', () => {
+  const { state, plane, from } = takenOffNear3();
+
+  plane.pos.z = from.z + 15;
+  expect(stepDocking(state, plane, NO_STEER, STATIONS, FLAT)).toBeNull();
+  expect(state.takeOff).toBeNull();
+
+  plane.pos.z = from.z;
+
+  expect(stepDocking(state, plane, NO_STEER, STATIONS, FLAT)).toEqual({
+    type: 'docked',
+    station: 3,
+    firstVisit: true,
+  });
+});
+
+caseTest('docking.takeoff.grace.autopilot', 'the grace spares only the autopilot target', () => {
+  const target = dockedAt(2);
+
+  nearStation(target.plane, 3, 8);
+
+  expect(
+    applyDockingCommand(
+      target.state,
+      { type: 'autopilot', station: 3 },
+      target.plane,
+      STATIONS,
+      FLAT,
+    ),
+  ).toEqual([
+    { type: 'undocked', station: 2 },
+    { type: 'autopilot-started', station: 3 },
+  ]);
+
+  expect(target.state.takeOff).toEqual(target.plane.pos);
+
+  expect(stepDocking(target.state, target.plane, NO_STEER, STATIONS, FLAT)).toEqual({
+    type: 'docked',
+    station: 3,
+    firstVisit: true,
+  });
+
+  const other = dockedAt(2);
+
+  nearStation(other.plane, 3, 8);
+  applyDockingCommand(other.state, { type: 'autopilot', station: 6 }, other.plane, STATIONS, FLAT);
+
+  expect(stepDocking(other.state, other.plane, FULL_STEER, STATIONS, FLAT)).toEqual({
+    type: 'autopilot-cancelled',
+  });
+
+  expect(stepDocking(other.state, other.plane, NO_STEER, STATIONS, FLAT)).toBeNull();
+  expect(other.state.mode).toEqual({ kind: 'free' });
+});
+
+caseTest('docking.takeoff.grace.home-cooldown', 'Home stays cooling while the grace holds', () => {
+  const plane = homeOrbit();
+  const state = afterIntro(plane);
+  const home = stationAt(0);
+  const { mode } = state;
+
+  if (mode.kind !== 'docked') {
+    throw new Error('expected a Home dock after the intro');
+  }
+
+  const dx = (mode.dock.x - home.x) / 26;
+  const dz = (mode.dock.z - home.z) / 26;
+
+  const fromHome = (distance: number): void => {
+    plane.pos.x = home.x + dx * distance;
+    plane.pos.z = home.z + dz * distance;
+  };
+
+  fromHome(26);
+  applyDockingCommand(state, { type: 'take-off' }, plane, STATIONS, FLAT);
+
+  for (const distance of [26, 11.1, 11]) {
+    fromHome(distance);
+    expect(stepDocking(state, plane, NO_STEER, STATIONS, FLAT)).toBeNull();
+    expect(state.cooldown).toBe(1);
+  }
+
+  fromHome(25);
+  expect(stepDocking(state, plane, NO_STEER, STATIONS, FLAT)).toBeNull();
+  expect(state.cooldown).toBe(0);
+
+  fromHome(10);
+
+  expect(stepDocking(state, plane, NO_STEER, STATIONS, FLAT)).toEqual({
+    type: 'docked',
+    station: 0,
+    firstVisit: false,
   });
 });
 
@@ -404,7 +606,7 @@ caseTest('docking.reset', 'reset returns to the Home orbit, free', () => {
   expect(resetDocking(state, plane, STATIONS)).toEqual({ type: 'reset' });
   expect(plane.pos).toEqual({ x: -36.30761184457488, y: 21, z: 31.307611844574883 });
   expect(plane).toMatchObject({ yaw: -2.356194490192345, pitch: 0, roll: 0, turn: 0 });
-  expect(state).toMatchObject({ mode: { kind: 'free' }, cooldown: 0, visited });
+  expect(state).toMatchObject({ mode: { kind: 'free' }, cooldown: 0, takeOff: null, visited });
 });
 
 caseTest('docking.sim.autopilot', 'autopilot from Home docks at This world', () => {

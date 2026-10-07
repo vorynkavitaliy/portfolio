@@ -1,4 +1,4 @@
-export type DockingCaseSource = 'prototype' | 'spec' | 'scene-rule';
+export type DockingCaseSource = 'prototype' | 'spec' | 'scene-rule' | 'owner-2026-10-07';
 
 export type DockingCase = Readonly<{
   id: string;
@@ -13,12 +13,15 @@ const DOCKING = 'spec FR-022 (within 15 blocks horizontally; free or autopilot t
 const TAKE_OFF = 'spec FR-025 / FR-026 / SC-005 (explicit take-off; no re-dock until > 24 away)';
 const AUTOPILOT = 'spec FR-031 / FR-032';
 
+const OWNER_GRACE =
+  'orchestrator: take-off must leave the plane free; prototype re-docked a neighbour; spec FR-022 / FR-025 / FR-026; plan §4.2';
+
 export const DOCKING_CASES = [
   {
     id: 'docking.create',
     source: 'prototype',
     reference: 'prototype :385, :1222–1223 (orbit k 0, sgn 1, nothing visited, intro running)',
-    expected: 'mode intro, orbitSide 1, cooldown 0, visited 0, introDone false',
+    expected: 'mode intro, orbitSide 1, cooldown 0, takeOff null, visited 0, introDone false',
   },
   {
     id: 'docking.intro.never-docks',
@@ -54,6 +57,27 @@ export const DOCKING_CASES = [
     expected: 'dock point (26.5, 17, −9.5)',
   },
   {
+    id: 'docking.dock-point.neighbour',
+    source: 'owner-2026-10-07',
+    reference: `${OWNER_GRACE}; 8 bearings, the clear one nearest the approach, else the farthest`,
+    expected:
+      'Home approached from station 1: dock turned 45° to (−24.976842348215516, 18, 24.537544048612066), ≥ 18 from every other station',
+  },
+  {
+    id: 'docking.dock-point.neighbour-margin',
+    source: 'owner-2026-10-07',
+    reference: `${OWNER_GRACE}; LINK_RANGE + 3`,
+    expected:
+      'neighbour 17 from the default hover point turns it +45° to (−7.071067811865475, 17, 7.0710678118654755); at 18.5 the default (0, 17, 10) stays',
+  },
+  {
+    id: 'docking.dock-point.crowded',
+    source: 'owner-2026-10-07',
+    reference: `${OWNER_GRACE}; fallback when no bearing is 18 clear`,
+    expected:
+      'eight neighbours at 20 (one at 24, bearing −90° from the approach): dock (10, 17, 6.123233995736766e-16) toward the farthest',
+  },
+  {
     id: 'docking.autopilot.passes-non-target',
     source: 'spec',
     reference: `${DOCKING} (passing another station on autopilot does not dock); ${PROTO_CHECK} :1345`,
@@ -75,7 +99,8 @@ export const DOCKING_CASES = [
     id: 'docking.takeoff',
     source: 'spec',
     reference: `${TAKE_OFF}; ${PROTO_LINK} :1248–1254`,
-    expected: 'take-off from 2 gives [undocked 2], mode free, cooldown holds station 2 only',
+    expected:
+      'take-off from 2 gives [undocked 2], mode free, cooldown holds station 2 only, takeOff is a copy of the plane position',
   },
   {
     id: 'docking.takeoff.cooldown',
@@ -88,7 +113,36 @@ export const DOCKING_CASES = [
     id: 'docking.takeoff.other-stations',
     source: 'spec',
     reference: `${TAKE_OFF} (other stations dock normally)`,
-    expected: 'right after take-off from 2, a plane near station 3 docks 3',
+    expected:
+      'after take-off from 2, a plane near station 3 (more than 15 from the take-off point) docks 3',
+  },
+  {
+    id: 'docking.takeoff.grace',
+    source: 'owner-2026-10-07',
+    reference: OWNER_GRACE,
+    expected:
+      'take-off 8 blocks from station 3: no dock at 0 and 14.9 blocks from the take-off point, docks 3 at exactly 15 and clears takeOff',
+  },
+  {
+    id: 'docking.takeoff.grace.released',
+    source: 'owner-2026-10-07',
+    reference: OWNER_GRACE,
+    expected:
+      'after 15 blocks away (no station in range) takeOff is cleared; returning to the take-off point docks 3',
+  },
+  {
+    id: 'docking.takeoff.grace.home-cooldown',
+    source: 'owner-2026-10-07',
+    reference: `${OWNER_GRACE}; ${TAKE_OFF} (the Home hover point is 26 > 24 away)`,
+    expected:
+      'take-off from the Home dock: at 26, 11.1 and 11 blocks from Home no event and Home still cooling; at 25 (grace over) the cooldown clears; at 10 it docks Home, firstVisit false',
+  },
+  {
+    id: 'docking.takeoff.grace.autopilot',
+    source: 'owner-2026-10-07',
+    reference: `${OWNER_GRACE}; ${AUTOPILOT}`,
+    expected:
+      'autopilot 3 from a dock 8 blocks from 3 docks 3 at once; autopilot 6 from there, cancelled, docks nothing inside the grace',
   },
   {
     id: 'docking.takeoff.ignored',
@@ -138,7 +192,7 @@ export const DOCKING_CASES = [
     source: 'spec',
     reference: 'spec FR-020; plan D-24 (Home orbit pose, mode free, no cooldown)',
     expected:
-      'reset event; plane at (−36.30761184457488, 21, 31.307611844574883); mode free; cooldown 0; visited kept',
+      'reset event; plane at (−36.30761184457488, 21, 31.307611844574883); mode free; cooldown 0; takeOff null; visited kept',
   },
   {
     id: 'docking.sim.autopilot',

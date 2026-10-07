@@ -7,6 +7,8 @@ import type { Locator, Page, TestInfo } from '@playwright/test';
 export const WORLD_PROJECT = 'desktop-1440';
 export const HOME_DOCK_MS = 3_000;
 export const AUTOPILOT_DOCK_MS = 90_000;
+export const DOCK_SETTLE_MS = 1_500;
+export const AWAY_MS = 2_500;
 export const SKIP_REASON = 'world flight specs run in desktop-1440 only';
 
 export const STATION_LABELS = {
@@ -63,6 +65,8 @@ export const autopilotCell = async (page: Page, id: StationKey): Promise<void> =
   await expect(station(page, id)).toHaveAttribute('data-docked', /.*/, {
     timeout: AUTOPILOT_DOCK_MS,
   });
+
+  await page.waitForTimeout(DOCK_SETTLE_MS);
 };
 
 export const expectUndocked = async (page: Page): Promise<void> => {
@@ -71,4 +75,10 @@ export const expectUndocked = async (page: Page): Promise<void> => {
 
 export const linked = (page: Page, n: number): Locator => {
   return page.getByText(`Linked ${n}/9`);
+};
+
+export const flyAway = async (page: Page): Promise<void> => {
+  await page.keyboard.down('w');
+  await page.waitForTimeout(AWAY_MS);
+  await page.keyboard.up('w');
 };

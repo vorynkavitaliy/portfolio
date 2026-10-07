@@ -89,7 +89,7 @@ export const HomeBase = ({ cvHref }: HomeBaseProps) => {
             >
               <b
                 data-motion="stat-value"
-                className="block font-pixel leading-stat font-normal text-signal text-stat-value wide:text-stat-value-wide"
+                className="block font-pixel text-stat-value leading-stat font-normal text-signal wide:text-stat-value-wide"
               >
                 {stat.value}
               </b>

@@ -1,14 +1,17 @@
 import {
   AUTOPILOT_CANCEL,
+  DOCK_BEARINGS,
   DOCK_DISTANCE,
   DOCK_GROUND_CLEARANCE,
   DOCK_HEIGHT,
   DOCK_MIN_OFFSET_SQ,
+  DOCK_NEIGHBOUR_CLEARANCE,
   HOME_DOCK_DISTANCE,
   HOME_DOCK_HEIGHT,
   HOME_STATION,
   LINK_RANGE,
   ORBIT_START_ANGLE,
+  TAKEOFF_GRACE_DISTANCE,
   UNLINK_RANGE,
 } from '@/scene/flight/flight.constants';
 import { horizontalDistance } from '@/scene/flight/flight-math';
@@ -44,7 +47,100 @@ const isStationIndex = (index: number, stations: readonly Readonly<Vec3>[]): boo
 };
 
 export const createDocking = (): DockingState => {
-  return { mode: { kind: 'intro' }, orbitSide: 1, cooldown: 0, visited: 0, introDone: false };
+  return {
+    mode: { kind: 'intro' },
+    orbitSide: 1,
+    cooldown: 0,
+    takeOff: null,
+    visited: 0,
+    introDone: false,
+  };
+};
+
+const neighbourClearance = (
+  index: number,
+  stations: readonly Readonly<Vec3>[],
+  x: number,
+  z: number,
+): number => {
+  let nearest = Number.POSITIVE_INFINITY;
+
+  stations.forEach((station, other) => {
+    if (other !== index) {
+      nearest = Math.min(nearest, horizontalDistance(station.x, station.z, x, z));
+    }
+  });
+
+  return nearest;
+};
+
+const dockBearing = (
+  index: number,
+  stations: readonly Readonly<Vec3>[],
+  top: Readonly<Vec3>,
+  ux: number,
+  uz: number,
+  distance: number,
+): Readonly<{ x: number; z: number }> => {
+  let best = { x: ux, z: uz };
+
+  let bestClearance = neighbourClearance(
+    index,
+    stations,
+    top.x + ux * distance,
+    top.z + uz * distance,
+  );
+
+  if (bestClearance >= DOCK_NEIGHBOUR_CLEARANCE) {
+    return best;
+  }
+
+  for (let turn = 1; turn < DOCK_BEARINGS; turn += 1) {
+    const step = turn % 2 === 1 ? (turn + 1) / 2 : -turn / 2;
+    const angle = (step * 2 * Math.PI) / DOCK_BEARINGS;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const x = ux * cos - uz * sin;
+    const z = ux * sin + uz * cos;
+
+    const clearance = neighbourClearance(
+      index,
+      stations,
+      top.x + x * distance,
+      top.z + z * distance,
+    );
+
+    if (clearance >= DOCK_NEIGHBOUR_CLEARANCE) {
+      return { x, z };
+    }
+
+    if (clearance > bestClearance) {
+      best = { x, z };
+      bestClearance = clearance;
+    }
+  }
+
+  return best;
+};
+
+const graceHolds = (state: DockingState, plane: Readonly<PlaneState>): boolean => {
+  const { takeOff } = state;
+
+  if (takeOff === null) {
+    return false;
+  }
+
+  if (horizontalDistance(takeOff.x, takeOff.z, plane.pos.x, plane.pos.z) < TAKEOFF_GRACE_DISTANCE) {
+    return true;
+  }
+
+  state.takeOff = null;
+
+  return false;
+};
+
+const takeOffPoint = (plane: Readonly<PlaneState>): Vec3 => {
+  return { x: plane.pos.x, y: plane.pos.y, z: plane.pos.z };
 };
 
 export const dockPoint = (
@@ -65,8 +161,9 @@ export const dockPoint = (
 
   const inverse = 1 / Math.sqrt(ox * ox + oz * oz);
   const distance = isHome ? HOME_DOCK_DISTANCE : DOCK_DISTANCE;
-  const x = top.x + ox * inverse * distance;
-  const z = top.z + oz * inverse * distance;
+  const bearing = dockBearing(index, stations, top, ox * inverse, oz * inverse, distance);
+  const x = top.x + bearing.x * distance;
+  const z = top.z + bearing.z * distance;
   const lift = isHome ? HOME_DOCK_HEIGHT : DOCK_HEIGHT;
   const y = Math.max(top.y + lift, terrain.heightAt(x, z) + DOCK_GROUND_CLEARANCE);
 
@@ -99,6 +196,7 @@ export const stepDocking = (
   stations: readonly Readonly<Vec3>[],
   terrain: Terrain,
 ): DockingEvent | null => {
+  const grace = graceHolds(state, plane);
   const cancels = state.introDone && steer.magnitude > AUTOPILOT_CANCEL;
 
   if (cancels && state.mode.kind === 'autopilot') {
@@ -117,7 +215,7 @@ export const stepDocking = (
     const distance = horizontalDistance(top.x, top.z, plane.pos.x, plane.pos.z);
 
     if (hasBit(state.cooldown, index)) {
-      if (distance > UNLINK_RANGE) {
+      if (!grace && distance > UNLINK_RANGE) {
         state.cooldown &= ~bit(index);
       }
 
@@ -130,8 +228,9 @@ export const stepDocking = (
 
     const { mode } = state;
     const isTarget = mode.kind === 'autopilot' && mode.target === index;
+    const isFree = mode.kind === 'free' && !grace;
 
-    if (mode.kind === 'free' || isTarget) {
+    if (isFree || isTarget) {
       return link(state, index, plane, stations, terrain);
     }
   }
@@ -169,6 +268,7 @@ export const applyDockingCommand = (
 
     state.cooldown |= bit(mode.station);
     state.mode = freeMode();
+    state.takeOff = takeOffPoint(plane);
 
     return [{ type: 'undocked', station: mode.station }];
   }
@@ -188,6 +288,7 @@ export const applyDockingCommand = (
   if (mode.kind === 'docked') {
     state.cooldown |= bit(mode.station);
     events.push({ type: 'undocked', station: mode.station });
+    state.takeOff = takeOffPoint(plane);
   }
 
   state.cooldown &= ~bit(target);
@@ -211,6 +312,7 @@ export const resetDocking = (
   state.mode = freeMode();
   state.orbitSide = 1;
   state.cooldown = 0;
+  state.takeOff = null;
 
   return { type: 'reset' };
 };

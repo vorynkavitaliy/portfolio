@@ -81,7 +81,16 @@
   --spacing-dock-top: 84px;
   --spacing-dock-bottom: 96px;
   --spacing-sheet-x: 12px;
-  --spacing-sheet-bottom: 64px;
+  --spacing-hud-bottom: 1rem;
+  --spacing-hud-bar: 2rem;
+  --spacing-hud-gap: 0.5rem;
+  --spacing-hud-hint: calc(2 * 0.8rem * 1.55);
+  --spacing-sheet-gap: 0.5rem;
+  --spacing-hud-clear: calc(
+    var(--spacing-hud-bottom) + var(--spacing-hud-bar) + var(--spacing-hud-gap) +
+      var(--spacing-hud-hint) + var(--spacing-sheet-gap)
+  );
+  --spacing-sheet-bottom: var(--spacing-hud-clear);
 
   --max-w-loader: 560px;
 }

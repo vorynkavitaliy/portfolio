@@ -8,6 +8,7 @@ import {
   bootToHome,
   dockedPanel,
   expectUndocked,
+  flyAway,
   headerButton,
   HOME_DOCK_MS,
   linked,
@@ -94,11 +95,13 @@ test('world.take-off-paths: Space, Esc and the panel button each undock and brin
   await page.keyboard.press('Space');
   await expectUndocked(page);
   await expect(hint).toBeVisible();
+  await flyAway(page);
 
   await autopilotCell(page, 'home-base');
   await page.keyboard.press('Escape');
   await expectUndocked(page);
   await expect(hint).toBeVisible();
+  await flyAway(page);
 
   await autopilotCell(page, 'home-base');
 
@@ -150,7 +153,7 @@ test('world.typing: keys are ignored while typing in the form', async ({ page })
   await page.keyboard.type('w a s d Shift');
   await page.keyboard.press('Space');
 
-  await expect(name).toHaveValue('w a s d Shift');
+  await expect(name).toHaveValue('w a s d Shift ');
   await expect(dockedPanel(page)).toHaveCount(1);
   await expect(station(page, 'contact')).toHaveAttribute('data-docked', /.*/);
 });
@@ -194,5 +197,9 @@ test('world.axe: no violations with Home docked', async ({ page }) => {
 
   const results = await new AxeBuilder({ page }).analyze();
 
-  expect(results.violations).toEqual([]);
+  const ids: string[] = results.violations.map((violation) => {
+    return violation.id;
+  });
+
+  expect(ids).toEqual([]);
 });
