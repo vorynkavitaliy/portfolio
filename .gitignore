@@ -1,0 +1,38 @@
+# deps and builds
+node_modules/
+.next/
+out/
+build/
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# tests and reports
+playwright-report/
+test-results/
+coverage/
+.lighthouse/
+
+# env (only the example is committed)
+.env*
+!.env.example
+
+# local harness (lives only on this machine, as in rehearse)
+.claude/
+CLAUDE.md
+board/
+docs/
+.mcp.json
+.serena/
+
+# os
+.DS_Store
+
+# review rules (harness)
+REVIEW.md
+
+# private test data (employer/project names — never public)
+*.local.json
+
+# regression and test output
+.regression/
+blob-report/

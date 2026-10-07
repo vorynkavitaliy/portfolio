@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+build
+coverage
+package-lock.json
+public
+*.md
+LICENSE
+.regression
+test-results
+playwright-report
+blob-report

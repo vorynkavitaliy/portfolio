@@ -1,0 +1,18 @@
+#!/bin/sh
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+run_step() {
+  name="$1"
+  shift
+  echo "pre-push: $name"
+  if ! "$@"; then
+    echo "pre-push: step '$name' failed, push cancelled." >&2
+    exit 1
+  fi
+}
+
+run_step verify npm run verify
+run_step test:ui npm run test:ui
+seed="$(date +%s)"
+echo "pre-push: test:server seed $seed"
+run_step test:server npm run test:server -- --sequence.shuffle --sequence.seed="$seed"
