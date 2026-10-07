@@ -10,7 +10,6 @@ const ALLOWED_SOURCES: readonly string[] = [
   'wcag',
   'playwright-docs',
   'owner-2026-10-07',
-  'owner-question:Q-6',
 ];
 
 test('every case id has exactly one test and every test id exists', () => {

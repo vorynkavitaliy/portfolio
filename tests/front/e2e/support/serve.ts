@@ -1,6 +1,8 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
+import { serverEnvFor } from '@tests/front/e2e/support/e2e-env';
+
 import type { ChildProcess } from 'node:child_process';
 
 const NEXT_BIN: string = join(process.cwd(), 'node_modules', '.bin', 'next');
@@ -14,6 +16,7 @@ if (port === '') {
 
 const env: NodeJS.ProcessEnv = {
   ...process.env,
+  ...serverEnvFor(`http://localhost:${port}`),
   NODE_ENV: 'production',
   NEXT_TELEMETRY_DISABLED: '1',
 };

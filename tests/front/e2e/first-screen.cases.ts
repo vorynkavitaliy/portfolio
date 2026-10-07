@@ -1,5 +1,5 @@
 export type FirstScreenCaseSource =
-  'security-md' | 'spec' | 'wcag' | 'playwright-docs' | 'owner-2026-10-07' | 'owner-question:Q-6';
+  'security-md' | 'spec' | 'wcag' | 'playwright-docs' | 'owner-2026-10-07';
 
 export type FirstScreenCase = Readonly<{
   id: string;
@@ -31,11 +31,19 @@ export const FIRST_SCREEN_CASES = [
   },
   {
     id: 'sec.headers.csp-default-script',
-    source: 'owner-question:Q-6',
+    source: 'security-md',
     reference:
-      'rules/security.md §3 Content-Security-Policy: default-src self and script-src self plus nonce or hash; Q-6 «CSP nonce vs hash» is open; known bug csp.default-src-script-src, one assertion',
+      "rules/security.md §3 Content-Security-Policy; ADR-006 (per-request nonce + 'strict-dynamic', set in src/proxy.ts)",
     expected:
-      "the Content-Security-Policy contains default-src 'self' and a script-src directive beginning 'self'",
+      "the response carries exactly one Content-Security-Policy header; it contains default-src 'self' and a script-src directive beginning 'self' that carries 'nonce-…' and 'strict-dynamic' and neither 'unsafe-inline' nor 'unsafe-eval'",
+  },
+  {
+    id: 'sec.headers.csp-nonce-fresh',
+    source: 'security-md',
+    reference:
+      'ADR-006; Next.js 16.4 guide «Content Security Policy»; data blocks (type="application/ld+json") excluded from nonce check (CSP does not apply to data blocks; the layout must not read headers() for a nonce)',
+    expected:
+      'two requests to / give two different nonces; every script tag (excluding data blocks) in the server HTML carries the nonce of its own response; in the browser the page hydrates (window.next is set) with no securitypolicyviolation event',
   },
   {
     id: 'sec.headers.no-powered-by',

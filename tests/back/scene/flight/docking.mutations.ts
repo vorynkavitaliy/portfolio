@@ -1,0 +1,188 @@
+import type { DockingCaseId } from '@tests/back/scene/flight/docking.cases';
+
+export type DockingMutation = Readonly<{
+  id: string;
+  file: string;
+  find: string;
+  replace: string;
+  nth?: number;
+  caseIds: readonly DockingCaseId[];
+}>;
+
+const DOCKING = 'src/scene/flight/docking.ts';
+const CONSTANTS = 'src/scene/flight/flight.constants.ts';
+
+export const DOCKING_MUTATIONS: readonly DockingMutation[] = [
+  {
+    id: 'link-range.wider',
+    file: CONSTANTS,
+    find: 'LINK_RANGE = 15',
+    replace: 'LINK_RANGE = 16',
+    caseIds: ['docking.free.link-range'],
+  },
+  {
+    id: 'unlink-range.shorter',
+    file: CONSTANTS,
+    find: 'UNLINK_RANGE = 24',
+    replace: 'UNLINK_RANGE = 20',
+    caseIds: ['docking.takeoff.cooldown'],
+  },
+  {
+    id: 'cancel.threshold',
+    file: CONSTANTS,
+    find: 'AUTOPILOT_CANCEL = 0.35',
+    replace: 'AUTOPILOT_CANCEL = 0.5',
+    caseIds: ['docking.autopilot.cancel'],
+  },
+  {
+    id: 'cancel.inclusive',
+    file: DOCKING,
+    find: 'steer.magnitude > AUTOPILOT_CANCEL',
+    replace: 'steer.magnitude >= AUTOPILOT_CANCEL',
+    caseIds: ['docking.autopilot.cancel'],
+  },
+  {
+    id: 'cooldown.not-set',
+    file: DOCKING,
+    find: '    state.cooldown |= bit(mode.station);\n    state.mode = freeMode();',
+    replace: '    state.mode = freeMode();',
+    caseIds: ['docking.takeoff', 'docking.takeoff.cooldown'],
+  },
+  {
+    id: 'cooldown.not-set-on-autopilot',
+    file: DOCKING,
+    find: "    state.cooldown |= bit(mode.station);\n    events.push({ type: 'undocked'",
+    replace: "    events.push({ type: 'undocked'",
+    caseIds: ['docking.autopilot.while-docked'],
+  },
+  {
+    id: 'cooldown.never-released',
+    file: DOCKING,
+    find: '        state.cooldown &= ~bit(index);',
+    replace: '        state.cooldown |= 0;',
+    caseIds: ['docking.takeoff.cooldown'],
+  },
+  {
+    id: 'cooldown.target-kept',
+    file: DOCKING,
+    find: '  state.cooldown &= ~bit(target);\n',
+    replace: '',
+    caseIds: ['docking.autopilot.clears-target-cooldown'],
+  },
+  {
+    id: 'visited.counted-twice',
+    file: DOCKING,
+    find: 'const firstVisit = !hasBit(state.visited, index);',
+    replace: 'const firstVisit = true;',
+    caseIds: [
+      'docking.takeoff.cooldown',
+      'docking.visited.count',
+      'docking.autopilot.clears-target-cooldown',
+    ],
+  },
+  {
+    id: 'visited.not-recorded',
+    file: DOCKING,
+    find: '  state.visited |= bit(index);\n',
+    replace: '',
+    caseIds: ['docking.intro-done.docks-home', 'docking.visited.count'],
+  },
+  {
+    id: 'autopilot.docks-passed-station',
+    file: DOCKING,
+    find: "if (mode.kind === 'free' || isTarget) {",
+    replace: "if (mode.kind === 'free' || mode.kind === 'autopilot') {",
+    caseIds: ['docking.autopilot.passes-non-target'],
+  },
+  {
+    id: 'intro.docks',
+    file: DOCKING,
+    find: 'if (!state.introDone || !(distance < LINK_RANGE)) {',
+    replace: 'if (!(distance < LINK_RANGE)) {',
+    caseIds: ['docking.intro.never-docks'],
+  },
+  {
+    id: 'docked.steer-undocks',
+    file: DOCKING,
+    find: "if (cancels && state.mode.kind === 'autopilot') {",
+    replace: "if (cancels && state.mode.kind !== 'free') {",
+    caseIds: ['docking.docked.ignores-steer'],
+  },
+  {
+    id: 'home.dock-distance',
+    file: CONSTANTS,
+    find: 'HOME_DOCK_DISTANCE = 26',
+    replace: 'HOME_DOCK_DISTANCE = 10',
+    caseIds: ['docking.intro-done.docks-home'],
+  },
+  {
+    id: 'dock.height',
+    file: CONSTANTS,
+    find: 'DOCK_HEIGHT = 6',
+    replace: 'DOCK_HEIGHT = 7',
+    caseIds: ['docking.dock-point.degenerate'],
+  },
+  {
+    id: 'dock.ground-clearance',
+    file: CONSTANTS,
+    find: 'DOCK_GROUND_CLEARANCE = 4',
+    replace: 'DOCK_GROUND_CLEARANCE = 3',
+    caseIds: ['docking.dock-point'],
+  },
+  {
+    id: 'dock.degenerate-guard',
+    file: DOCKING,
+    find: '    ox = 0;\n    oz = 1;',
+    replace: '    ox = 1;\n    oz = 0;',
+    caseIds: ['docking.dock-point.degenerate'],
+  },
+  {
+    id: 'orbit-side.flipped',
+    file: DOCKING,
+    find: '>= 0 ? 1 : -1;',
+    replace: '>= 0 ? -1 : 1;',
+    caseIds: ['docking.intro-done.docks-home', 'docking.dock-point'],
+  },
+  {
+    id: 'takeoff.during-intro',
+    file: DOCKING,
+    find: '  if (!state.introDone) {\n    return NO_EVENTS;\n  }',
+    replace: '',
+    caseIds: ['docking.autopilot.invalid'],
+  },
+  {
+    id: 'autopilot.current-undocks',
+    file: DOCKING,
+    find: "  if (mode.kind === 'docked' && mode.station === target) {\n    return NO_EVENTS;\n  }",
+    replace: '',
+    caseIds: ['docking.autopilot.current'],
+  },
+  {
+    id: 'autopilot.index-unchecked',
+    file: DOCKING,
+    find: '  if (!isStationIndex(target, stations)) {\n    return NO_EVENTS;\n  }',
+    replace: '',
+    caseIds: ['docking.autopilot.invalid'],
+  },
+  {
+    id: 'reset.keeps-cooldown',
+    file: DOCKING,
+    find: '  state.cooldown = 0;\n',
+    replace: '',
+    caseIds: ['docking.reset'],
+  },
+  {
+    id: 'reset.keeps-mode',
+    file: DOCKING,
+    find: '  state.mode = freeMode();\n  state.orbitSide = 1;',
+    replace: '  state.orbitSide = 1;',
+    caseIds: ['docking.reset'],
+  },
+  {
+    id: 'reset.no-placement',
+    file: DOCKING,
+    find: '    placeOnOrbit(plane, home, ORBIT_START_ANGLE);',
+    replace: '    plane.speed = 0;',
+    caseIds: ['docking.reset'],
+  },
+];

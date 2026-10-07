@@ -1,0 +1,276 @@
+import type { ContactCaseId } from '@tests/front/ui/contact/contact.cases';
+
+export type ContactMutation = Readonly<{
+  id: string;
+  file: string;
+  find: string;
+  replace: string;
+  nth?: number;
+  caseIds: readonly ContactCaseId[];
+}>;
+
+const FORM = 'src/sections/contact/contact-form.client.tsx';
+const COPY = 'src/sections/contact/copy-email.client.tsx';
+
+export const CONTACT_MUTATIONS: readonly ContactMutation[] = [
+  {
+    id: 'name-limit-dropped',
+    file: FORM,
+    find: '            maxLength={CONTACT_LIMITS.name}\n',
+    replace: '',
+    caseIds: ['contact-form.limits'],
+  },
+  {
+    id: 'email-limit-dropped',
+    file: FORM,
+    find: '            maxLength={CONTACT_LIMITS.email}\n',
+    replace: '',
+    caseIds: ['contact-form.limits'],
+  },
+  {
+    id: 'message-limit-dropped',
+    file: FORM,
+    find: '          maxLength={CONTACT_LIMITS.message}\n',
+    replace: '',
+    caseIds: ['contact-form.limits'],
+  },
+  {
+    id: 'honeypot-focusable',
+    file: FORM,
+    find: ' tabIndex={-1}',
+    replace: '',
+    caseIds: ['contact-form.honeypot'],
+  },
+  {
+    id: 'honeypot-exposed',
+    file: FORM,
+    find: '<div className="hp" aria-hidden="true">',
+    replace: '<div className="hp">',
+    caseIds: ['contact-form.honeypot'],
+  },
+  {
+    id: 'honeypot-autocomplete',
+    file: FORM,
+    find: ' autoComplete="off"',
+    replace: '',
+    caseIds: ['contact-form.honeypot'],
+  },
+  {
+    id: 'started-at-never-set',
+    file: FORM,
+    find: '      setStartedAt(String(Date.now()));\n',
+    replace: '',
+    caseIds: ['contact-form.started-at-mount'],
+  },
+  {
+    id: 'started-at-zero',
+    file: FORM,
+    find: '      setStartedAt(String(Date.now()));\n',
+    replace: "      setStartedAt('0');\n",
+    caseIds: ['contact-form.started-at-mount'],
+  },
+  {
+    id: 'invalid-submit-goes-through',
+    file: FORM,
+    find: '    event.preventDefault();\n',
+    replace: '',
+    caseIds: ['contact-form.empty-errors', 'contact-form.client-rules'],
+  },
+  {
+    id: 'aria-invalid-dropped',
+    file: FORM,
+    find: "'aria-invalid': message === undefined ? undefined : true,",
+    replace: "'aria-invalid': undefined,",
+    caseIds: ['contact-form.empty-errors', 'contact-form.server-field-errors'],
+  },
+  {
+    id: 'aria-invalid-always',
+    file: FORM,
+    find: "'aria-invalid': message === undefined ? undefined : true,",
+    replace: "'aria-invalid': true,",
+    caseIds: ['contact-form.client-rules', 'contact-form.server-field-errors'],
+  },
+  {
+    id: 'describedby-wrong',
+    file: FORM,
+    find: "'aria-describedby': `e-${field}`,",
+    replace: "'aria-describedby': `x-${field}`,",
+    caseIds: ['contact-form.empty-errors'],
+  },
+  {
+    id: 'focus-dropped-client',
+    file: FORM,
+    find: '    setClientErrors(errors);\n    focusFirstInvalid(errors);\n',
+    replace: '    setClientErrors(errors);\n',
+    caseIds: ['contact-form.focus-first-invalid'],
+  },
+  {
+    id: 'focus-order-reversed',
+    file: FORM,
+    find: "const FIELD_ORDER: readonly ContactField[] = ['name', 'email', 'message'];",
+    replace: "const FIELD_ORDER: readonly ContactField[] = ['message', 'email', 'name'];",
+    caseIds: ['contact-form.focus-first-invalid'],
+  },
+  {
+    id: 'focus-dropped-server',
+    file: FORM,
+    find: '      focusFirstInvalid(state.fieldErrors);\n',
+    replace: '',
+    caseIds: ['contact-form.server-field-errors'],
+  },
+  {
+    id: 'client-schema-skipped',
+    file: FORM,
+    find: '    if (result.success) {',
+    replace: '    if (true) {',
+    caseIds: ['contact-form.empty-errors', 'contact-form.client-rules'],
+  },
+  {
+    id: 'sending-label-dropped',
+    file: FORM,
+    find: '{pending ? copy.sending : copy.submit}',
+    replace: '{copy.submit}',
+    caseIds: ['contact-form.pending'],
+  },
+  {
+    id: 'pending-not-disabled',
+    file: FORM,
+    find: '          disabled={pending}\n',
+    replace: '',
+    caseIds: ['contact-form.pending'],
+  },
+  {
+    id: 'celebrate-dropped',
+    file: FORM,
+    find: "      worldStore.dispatch({ type: 'celebrate-send' });\n",
+    replace: '',
+    caseIds: ['contact-form.sent'],
+  },
+  {
+    id: 'celebrate-twice',
+    file: FORM,
+    find: "      worldStore.dispatch({ type: 'celebrate-send' });\n",
+    replace:
+      "      worldStore.dispatch({ type: 'celebrate-send' });\n      worldStore.dispatch({ type: 'celebrate-send' });\n",
+    caseIds: ['contact-form.sent'],
+  },
+  {
+    id: 'contact-sent-dropped',
+    file: FORM,
+    find: "      track({ name: 'contact_sent' });\n",
+    replace: '',
+    caseIds: ['contact-form.sent'],
+  },
+  {
+    id: 'celebrate-on-error',
+    file: FORM,
+    find: "    if (state.status === 'sent') {",
+    replace: "    if (state.status !== 'idle') {",
+    caseIds: ['contact-form.not-sent-silent'],
+  },
+  {
+    id: 'sent-status-dropped',
+    file: FORM,
+    find: "  if (state.status === 'sent') {\n    return copy.status.sent;\n  }\n",
+    replace: '',
+    caseIds: ['contact-form.sent'],
+  },
+  {
+    id: 'rate-limited-status-dropped',
+    file: FORM,
+    find: "    if (state.code === 'RATE_LIMITED') {\n      return copy.status.rateLimited;\n    }\n",
+    replace: '',
+    caseIds: ['contact-form.rate-limited'],
+  },
+  {
+    id: 'send-failed-status-dropped',
+    file: FORM,
+    find: "    if (state.code === 'SEND_FAILED') {\n      return copy.status.sendFailed;\n    }\n",
+    replace: '',
+    caseIds: ['contact-form.send-failed', 'contact-form.not-sent-silent'],
+  },
+  {
+    id: 'invalid-status-dropped-client',
+    file: FORM,
+    find: '  if (clientInvalid) {\n    return copy.status.invalid;\n  }\n',
+    replace: '',
+    caseIds: ['contact-form.empty-errors'],
+  },
+  {
+    id: 'status-role-dropped',
+    file: FORM,
+    find: ' role="status"',
+    replace: '',
+    caseIds: ['contact-form.status-live'],
+  },
+  {
+    id: 'server-errors-ignored',
+    file: FORM,
+    find: "state.status === 'error' && state.fieldErrors !== null ? state.fieldErrors : {}",
+    replace: '{}',
+    caseIds: ['contact-form.server-field-errors'],
+  },
+  {
+    id: 'copy-label-wrong',
+    file: COPY,
+    find: '{copied ? copy.done : copy.idle}',
+    replace: '{copy.idle}',
+    caseIds: ['copy-email.copied'],
+  },
+  {
+    id: 'copy-never-resets',
+    file: COPY,
+    find: '      setCopied(false);\n',
+    replace: '',
+    caseIds: ['copy-email.copied'],
+  },
+  {
+    id: 'copy-reset-early',
+    file: COPY,
+    find: 'export const COPIED_RESET_MS = 1600;',
+    replace: 'export const COPIED_RESET_MS = 600;',
+    caseIds: ['copy-email.copied'],
+  },
+  {
+    id: 'copy-writes-nothing',
+    file: COPY,
+    find: 'writeText(email)',
+    replace: "writeText('')",
+    caseIds: ['copy-email.copied'],
+  },
+  {
+    id: 'fallback-dropped',
+    file: COPY,
+    find: '.then(markCopied, selectText)',
+    replace: '.then(markCopied)',
+    caseIds: ['copy-email.fallback'],
+  },
+  {
+    id: 'email-copy-never-tracked',
+    file: COPY,
+    find: "    track({ name: 'email_copy' });\n",
+    replace: '',
+    caseIds: ['copy-email.tracks-once'],
+  },
+  {
+    id: 'email-copy-twice',
+    file: COPY,
+    find: "    track({ name: 'email_copy' });\n",
+    replace: "    track({ name: 'email_copy' });\n    track({ name: 'email_copy' });\n",
+    caseIds: ['copy-email.tracks-once'],
+  },
+  {
+    id: 'email-copy-on-render',
+    file: COPY,
+    find: '  return (\n    <>',
+    replace: "  track({ name: 'email_copy' });\n\n  return (\n    <>",
+    caseIds: ['copy-email.tracks-once'],
+  },
+  {
+    id: 'idle-label-dropped',
+    file: COPY,
+    find: '{copied ? copy.done : copy.idle}',
+    replace: '{copied ? copy.done : copy.done}',
+    caseIds: ['copy-email.idle'],
+  },
+];

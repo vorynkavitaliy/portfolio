@@ -1,12 +1,18 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-import { expectKnownBug } from '@tests/front/e2e/support/known-bug';
-
 import type { FirstScreenCaseId } from '@tests/front/e2e/first-screen.cases';
 
 const caseTitle = (id: FirstScreenCaseId, description: string): string => {
   return `${id}: ${description}`;
+};
+
+const NONCE_SOURCE = /'nonce-([^']+)'/;
+
+const SCRIPT_OPEN_TAG = /<script\b[^>]*>/g;
+
+const nonceOf = (policy: string): string => {
+  return NONCE_SOURCE.exec(policy)?.[1] ?? '';
 };
 
 test(caseTitle('spec.first-screen.status', 'answers 200'), async ({ request }) => {
@@ -47,21 +53,96 @@ test(caseTitle('sec.headers.present', 'security headers are set'), async ({ requ
 });
 
 test(
-  caseTitle('sec.headers.csp-default-script', 'default-src and script-src are set'),
+  caseTitle('sec.headers.csp-default-script', 'default-src and a nonce script-src are set'),
   async ({ request }) => {
-    const policy: string[] = (
-      (await request.get('/')).headers()['content-security-policy'] ?? ''
-    ).split('; ');
+    const response = await request.get('/');
 
-    await expectKnownBug('csp.default-src-script-src', async () => {
-      expect(policy).toContain("default-src 'self'");
+    const policies: string[] = response
+      .headersArray()
+      .filter((header) => {
+        return header.name.toLowerCase() === 'content-security-policy';
+      })
+      .map((header) => {
+        return header.value;
+      });
 
-      expect(
-        policy.some((directive: string) => {
-          return directive.startsWith("script-src 'self'");
-        }),
-      ).toBe(true);
+    expect(policies).toHaveLength(1);
+
+    const policy: string[] = (policies[0] ?? '').split('; ');
+
+    expect(policy).toContain("default-src 'self'");
+
+    const scriptSrc: string[] = (
+      policy.find((directive: string) => {
+        return directive.startsWith('script-src ');
+      }) ?? ''
+    ).split(' ');
+
+    expect(scriptSrc.slice(0, 2)).toEqual(['script-src', "'self'"]);
+
+    expect(
+      scriptSrc.some((source: string) => {
+        return /^'nonce-[A-Za-z0-9+/]+=*'$/.test(source);
+      }),
+    ).toBe(true);
+
+    expect(scriptSrc).toContain("'strict-dynamic'");
+    expect(scriptSrc).not.toContain("'unsafe-inline'");
+    expect(scriptSrc).not.toContain("'unsafe-eval'");
+  },
+);
+
+test(
+  caseTitle('sec.headers.csp-nonce-fresh', 'nonce is fresh per request and on every script'),
+  async ({ request, page }) => {
+    const first = await request.get('/');
+    const second = await request.get('/');
+
+    const firstNonce: string = nonceOf(first.headers()['content-security-policy'] ?? '');
+    const secondNonce: string = nonceOf(second.headers()['content-security-policy'] ?? '');
+
+    expect(firstNonce).not.toBe('');
+    expect(secondNonce).not.toBe('');
+    expect(firstNonce).not.toBe(secondNonce);
+
+    const scripts: string[] = [...(await first.text()).matchAll(SCRIPT_OPEN_TAG)]
+      .map((match) => {
+        return match[0];
+      })
+      .filter((tag) => {
+        return !tag.includes('type="application/ld+json"');
+      });
+
+    expect(scripts.length).toBeGreaterThan(0);
+
+    for (const tag of scripts) {
+      expect(tag).toContain(`nonce="${firstNonce}"`);
+    }
+
+    await page.addInitScript(() => {
+      const violations: string[] = [];
+
+      Object.defineProperty(window, '__cspViolations', { value: violations });
+
+      document.addEventListener(
+        'securitypolicyviolation',
+        (event: SecurityPolicyViolationEvent) => {
+          violations.push(`${event.effectiveDirective} ${event.blockedURI}`);
+        },
+      );
     });
+
+    await page.goto('/');
+
+    await page.waitForFunction(() => {
+      return 'next' in window;
+    });
+
+    const violations: unknown = await page.evaluate(() => {
+      return Reflect.get(window, '__cspViolations');
+    });
+
+    expect(violations).toEqual([]);
   },
 );
 

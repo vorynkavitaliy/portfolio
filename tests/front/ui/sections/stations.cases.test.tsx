@@ -1,0 +1,43 @@
+/// <reference types="vite/client" />
+
+import { expect, test } from 'vitest';
+
+import { STATIONS_CASES } from '@tests/front/ui/sections/stations.cases';
+import source from '@tests/front/ui/sections/stations.test.tsx?raw';
+
+const ALLOWED_SOURCES: readonly string[] = ['spec', 'prototype', 'content'];
+
+test('every case id has a test and every test id exists in the catalogue', () => {
+  const used: readonly string[] = [...source.matchAll(/caseTest\(\s*'([^']+)'/g)].map((match) => {
+    return match[1] ?? '';
+  });
+
+  const known: readonly string[] = STATIONS_CASES.map((entry) => {
+    return entry.id;
+  });
+
+  expect(
+    known.filter((id) => {
+      return !used.includes(id);
+    }),
+  ).toEqual([]);
+
+  expect(
+    used.filter((id) => {
+      return !known.includes(id);
+    }),
+  ).toEqual([]);
+
+  expect(new Set(used).size).toBe(used.length);
+});
+
+test('every case names an allowed source and a reference', () => {
+  for (const entry of STATIONS_CASES) {
+    expect(ALLOWED_SOURCES).toContain(entry.source);
+    expect(entry.reference).not.toBe('');
+  }
+});
+
+test('the suite has no focused, skipped or todo tests', () => {
+  expect(source).not.toMatch(/\b(test|it|describe)\.(only|skip|todo|fails)\b/);
+});

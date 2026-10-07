@@ -1,0 +1,27 @@
+'use server';
+
+import 'server-only';
+
+import { headers } from 'next/headers';
+
+import { getServerEnv } from '@/core/config/server-env';
+import { handleContact } from '@/sections/contact/actions/handle-contact';
+import { sendContactMail } from '@/server/mail/mail';
+import { takeContactToken } from '@/server/rate-limit/rate-limit';
+import { clientIp } from '@/server/request/client-ip';
+
+import type { ContactFormState } from '@/sections/contact/contact.types';
+
+export const sendMessageAction = async (
+  _previous: ContactFormState,
+  formData: FormData,
+): Promise<ContactFormState> => {
+  const ip: string = clientIp(await headers(), getServerEnv().CLIENT_IP_HEADER);
+
+  return handleContact(formData, {
+    ip,
+    now: Date.now(),
+    takeToken: takeContactToken,
+    send: sendContactMail,
+  });
+};

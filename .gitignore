@@ -36,3 +36,9 @@ REVIEW.md
 # regression and test output
 .regression/
 blob-report/
+
+# vitest 5 browser-mode cache (orchestrator, B1 review)
+.vitest/
+
+# agent notes written by next dev
+AGENTS.md

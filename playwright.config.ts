@@ -3,10 +3,13 @@ import { join } from 'node:path';
 
 import { defineConfig, devices } from '@playwright/test';
 
+const MAIL_INFO_URL = 'http://127.0.0.1:8025/api/v1/info';
+
 const FREE_PORT_SCRIPT =
   "const s=require('node:net').createServer();s.listen(0,'localhost',()=>{process.stdout.write(String(s.address().port));s.close();})";
 
 const BUILD_AND_START_TIMEOUT_MS = 600_000;
+const MAILPIT_TIMEOUT_MS = 120_000;
 const SHUTDOWN_TIMEOUT_MS = 30_000;
 const DESKTOP = { width: 1440, height: 900 };
 const PHONE = { width: 390, height: 844 };
@@ -56,13 +59,24 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], viewport: DESKTOP, reducedMotion: 'reduce' },
     },
   ],
-  webServer: {
-    command: 'node --import tsx tests/front/e2e/support/serve.ts',
-    url: baseURL,
-    timeout: BUILD_AND_START_TIMEOUT_MS,
-    reuseExistingServer: false,
-    stdout: 'ignore',
-    stderr: 'pipe',
-    gracefulShutdown: { signal: 'SIGTERM', timeout: SHUTDOWN_TIMEOUT_MS },
-  },
+  webServer: [
+    {
+      command: 'docker compose -f docker-compose.dev.yml up mailpit',
+      url: MAIL_INFO_URL,
+      timeout: MAILPIT_TIMEOUT_MS,
+      reuseExistingServer: true,
+      stdout: 'ignore',
+      stderr: 'pipe',
+      gracefulShutdown: { signal: 'SIGTERM', timeout: SHUTDOWN_TIMEOUT_MS },
+    },
+    {
+      command: 'node --import tsx tests/front/e2e/support/serve.ts',
+      url: baseURL,
+      timeout: BUILD_AND_START_TIMEOUT_MS,
+      reuseExistingServer: false,
+      stdout: 'ignore',
+      stderr: 'pipe',
+      gracefulShutdown: { signal: 'SIGTERM', timeout: SHUTDOWN_TIMEOUT_MS },
+    },
+  ],
 });

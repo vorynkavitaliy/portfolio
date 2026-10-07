@@ -20,13 +20,19 @@
     "test:e2e": "playwright test",
     "test:mutate": "node --import tsx scripts/mutate.mts",
     "regress": "node --import tsx scripts/regress.mts",
+    "mail:up": "docker compose -f docker-compose.dev.yml up -d mailpit",
+    "mail:down": "docker compose -f docker-compose.dev.yml down",
     "prepare": "node -e \"const{existsSync}=require('fs');if(!process.env.CI&&existsSync('.git')){require('child_process').spawnSync('git',['config','core.hooksPath','.githooks'],{stdio:'ignore'})}\""
   },
   "dependencies": {
+    "@gsap/react": "2.1.2",
+    "gsap": "3.15.0",
     "next": "16.4.0",
+    "nodemailer": "10.0.15",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "0.0.1",
+    "three": "0.186.1",
     "zod": "4.6.5"
   },
   "devDependencies": {
@@ -37,6 +43,7 @@
     "@types/node": "26.6.4",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@types/three": "0.186.0",
     "@vitest/browser": "5.0.3",
     "@vitest/browser-playwright": "5.0.3",
     "axe-core": "4.14.0",
