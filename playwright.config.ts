@@ -41,6 +41,7 @@ export default defineConfig({
   testDir: 'tests/front/e2e',
   outputDir: join('node_modules', '.cache', 'portfolio-e2e', 'results'),
   fullyParallel: true,
+  workers: 2,
   forbidOnly: true,
   retries: 0,
   reporter: [['list']],
