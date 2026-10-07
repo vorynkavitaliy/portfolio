@@ -33,6 +33,7 @@ export type NavOverlay = Readonly<{
 
 type LabelSlot = {
   element: HTMLElement;
+  text: string;
   visible: boolean;
   target: boolean;
   distance: number;
@@ -48,6 +49,7 @@ const createLabelSlot = (id: StationId): LabelSlot => {
 
   return {
     element,
+    text: '',
     visible: false,
     target: false,
     distance: Number.NaN,
@@ -207,7 +209,8 @@ export const createNavOverlay = (options: NavOverlayOptions): NavOverlay => {
       const top = Math.round((-ndcY * 0.5 + 0.5) * frame.height);
       const text = textFor(index, rounded);
 
-      if (slot.element.textContent !== text) {
+      if (slot.text !== text) {
+        slot.text = text;
         slot.element.textContent = text;
       }
 
@@ -254,7 +257,7 @@ export const createNavOverlay = (options: NavOverlayOptions): NavOverlay => {
       }
     },
     setVisible: (visible) => {
-      root.style.opacity = visible ? '1' : '0';
+      root.dataset['on'] = visible ? 'true' : 'false';
     },
     dispose: () => {
       for (const slot of slots) {

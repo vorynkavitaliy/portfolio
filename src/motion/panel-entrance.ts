@@ -57,14 +57,14 @@ export const PANEL_ENTRANCE_STEPS = [
   },
 ] as const satisfies readonly MotionStep<PanelTarget>[];
 
-const running = new WeakMap<Element, gsap.core.Timeline>();
+const running = new WeakMap<Element, () => void>();
 
 const query = (root: Element, selector: string): readonly Element[] => {
   return [...root.querySelectorAll(selector)];
 };
 
 export const playPanelEntrance = (root: Element): gsap.core.Timeline => {
-  running.get(root)?.revert();
+  running.get(root)?.();
 
   const timeline: gsap.core.Timeline = gsap.timeline();
 
@@ -93,16 +93,21 @@ export const playPanelEntrance = (root: Element): gsap.core.Timeline => {
     PANEL_MOTION.numberRoll,
   );
 
-  running.set(root, timeline);
-
-  onSettled(timeline, () => {
+  const settle: () => void = onSettled(timeline, () => {
     restoreNumbers();
     split?.revert();
 
-    if (running.get(root) === timeline) {
+    if (running.get(root) === dispose) {
       running.delete(root);
     }
   });
+
+  const dispose = (): void => {
+    timeline.revert();
+    settle();
+  };
+
+  running.set(root, dispose);
 
   return timeline;
 };

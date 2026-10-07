@@ -1,9 +1,9 @@
 import { test } from 'vitest';
 
-import type { StationFrameCaseId } from '@tests/front/ui/sections/station-frame.cases';
+import type { WorldShellCaseId } from '@tests/front/ui/world/world-shell.cases';
 
 export const caseTest = (
-  id: StationFrameCaseId,
+  id: WorldShellCaseId,
   description: string,
   run: () => Promise<void> | void,
 ): void => {

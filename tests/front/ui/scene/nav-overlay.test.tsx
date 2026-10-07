@@ -201,11 +201,12 @@ caseTest('nav.no-redundant-writes', 'an identical frame changes nothing', () => 
   watch.restore();
 });
 
-caseTest('nav.set-visible', 'the layer fades with opacity', () => {
+caseTest('nav.set-visible', 'the layer is marked on and off through data-on', () => {
   overlay.setVisible(true);
-  expect(root.style.opacity).toBe('1');
+  expect(root.dataset['on']).toBe('true');
+  expect(root.style.opacity).toBe('');
   overlay.setVisible(false);
-  expect(root.style.opacity).toBe('0');
+  expect(root.dataset['on']).toBe('false');
 });
 
 caseTest('nav.dispose', 'everything is removed', () => {

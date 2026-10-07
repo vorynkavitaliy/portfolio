@@ -39,6 +39,7 @@ export const GLOW_COLORS = {
   centre: [3.0, 1.6, 0.2],
   pillar: [0.6, 1.6, 2.4],
   sculpture: [0.5, 2.2, 2.6],
+  link: [2.2, 1.2, 0.2],
 } as const satisfies Record<string, Rgb>;
 
 export const MINIMAP_COLORS = {
@@ -48,3 +49,18 @@ export const MINIMAP_COLORS = {
   stone: [120, 124, 130],
   snow: [235, 240, 245],
 } as const satisfies Record<string, Rgb>;
+
+export const MINIMAP_MARKERS = {
+  visited: '#ffaa00',
+  pending: '#ffffff',
+  core: '#000000',
+  plane: '#ff5a5a',
+} as const;
+
+export const PLANE_COLORS = {
+  hull: linearFromHex('#d5dbe8'),
+  wing: linearFromHex('#8d97ad'),
+  nose: linearFromHex('#e08a00'),
+  canopy: linearFromHex('#2b3f66'),
+  prop: linearFromHex('#9aa3b5'),
+} as const;

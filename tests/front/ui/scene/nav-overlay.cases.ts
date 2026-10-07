@@ -68,7 +68,7 @@ export const NAV_OVERLAY_CASES = [
     id: 'nav.set-visible',
     source: 'prototype',
     reference: 'prototype :1604 (nav layer fades in on take off)',
-    expected: 'setVisible toggles the layer opacity 1 and 0',
+    expected: 'setVisible sets data-on true and false on the layer; CSS owns the fade',
   },
   {
     id: 'nav.dispose',

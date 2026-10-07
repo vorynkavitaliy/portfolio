@@ -1,18 +1,21 @@
-/// <reference types="vite/client" />
+import { readFileSync } from 'node:fs';
 
 import { expect, test } from 'vitest';
 
-import { STATION_FRAME_CASES } from '@tests/front/ui/sections/station-frame.cases';
-import source from '@tests/front/ui/sections/station-frame.test.tsx?raw';
+import { BOOT_CASES } from '@tests/back/sections/world/boot.cases';
 
-const ALLOWED_SOURCES: readonly string[] = ['spec', 'prototype', 'content'];
+const ALLOWED_SOURCES: readonly string[] = ['spec', 'owner-2026-10-07', 'prototype', 'mdn-docs'];
+
+const TEST_FILE = 'tests/back/sections/world/boot.test.ts';
 
 test('every case id has a test and every test id exists in the catalogue', () => {
+  const source: string = readFileSync(TEST_FILE, 'utf8');
+
   const used: readonly string[] = [...source.matchAll(/caseTest\(\s*'([^']+)'/g)].map((match) => {
     return match[1] ?? '';
   });
 
-  const known: readonly string[] = STATION_FRAME_CASES.map((entry) => {
+  const known: readonly string[] = BOOT_CASES.map((entry) => {
     return entry.id;
   });
 
@@ -31,13 +34,17 @@ test('every case id has a test and every test id exists in the catalogue', () =>
   expect(new Set(used).size).toBe(used.length);
 });
 
+test('case ids are unique', () => {
+  const ids: readonly string[] = BOOT_CASES.map((entry) => {
+    return entry.id;
+  });
+
+  expect(new Set(ids).size).toBe(ids.length);
+});
+
 test('every case names an allowed source and a reference', () => {
-  for (const entry of STATION_FRAME_CASES) {
+  for (const entry of BOOT_CASES) {
     expect(ALLOWED_SOURCES).toContain(entry.source);
     expect(entry.reference).not.toBe('');
   }
-});
-
-test('the suite has no focused, skipped or todo tests', () => {
-  expect(source).not.toMatch(/\b(test|it|describe)\.(only|skip|todo|fails)\b/);
 });

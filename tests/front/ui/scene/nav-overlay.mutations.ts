@@ -169,7 +169,7 @@ export const NAV_OVERLAY_MUTATIONS: readonly NavOverlayMutation[] = [
   {
     id: 'writes.text',
     file: OVERLAY,
-    find: 'if (slot.element.textContent !== text) {',
+    find: 'if (slot.text !== text) {',
     replace: 'if (true) {',
     caseIds: ['nav.no-redundant-writes'],
   },
@@ -204,8 +204,8 @@ export const NAV_OVERLAY_MUTATIONS: readonly NavOverlayMutation[] = [
   {
     id: 'layer.inverted',
     file: OVERLAY,
-    find: "root.style.opacity = visible ? '1' : '0';",
-    replace: "root.style.opacity = visible ? '0' : '1';",
+    find: "root.dataset['on'] = visible ? 'true' : 'false';",
+    replace: "root.dataset['on'] = visible ? 'false' : 'true';",
     caseIds: ['nav.set-visible'],
   },
   {

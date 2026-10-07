@@ -71,6 +71,10 @@ export const CopyEmail = ({ email, copy }: CopyEmailProps) => {
       <button type="button" className="copy" data-copy-email="" onClick={handleClick}>
         {copied ? copy.done : copy.idle}
       </button>
+
+      <span className="sr-only" role="status" aria-live="polite" data-copy-live="">
+        {copied ? copy.done : ''}
+      </span>
     </>
   );
 };

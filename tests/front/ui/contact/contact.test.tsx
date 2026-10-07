@@ -216,11 +216,13 @@ caseTest('contact-form.pending', 'sending label and disabled', async () => {
   await fillValid(form);
   await form.submit.click();
 
-  const pendingButton = form.screen.getByRole('button', { name: 'Sending…', exact: true });
-
-  await expect.element(pendingButton).toBeDisabled();
-
-  release();
+  try {
+    await expect
+      .element(form.screen.getByRole('button', { name: 'Sending…', exact: true }))
+      .toBeDisabled();
+  } finally {
+    release();
+  }
 
   await expect
     .element(form.screen.getByRole('button', { name: 'Send message', exact: true }))
@@ -315,6 +317,54 @@ caseTest('contact-form.server-field-errors', 'server errors shown and focused', 
     .toBeVisible();
 });
 
+const ERROR_REPLIES: readonly ContactFormState[] = [
+  { status: 'error', code: 'RATE_LIMITED', fieldErrors: null },
+  { status: 'error', code: 'SEND_FAILED', fieldErrors: null },
+  {
+    status: 'error',
+    code: 'INVALID_INPUT',
+    fieldErrors: { email: 'Enter a valid email, like name@company.com.' },
+  },
+];
+
+caseTest('contact-form.keeps-values-on-error', 'values survive every error reply', async () => {
+  for (const reply of ERROR_REPLIES) {
+    const form = await mountForm(answering(reply));
+
+    await fillValid(form);
+    await form.submit.click();
+    await expect.element(form.status).not.toHaveTextContent('');
+    await settle();
+
+    expect(form.name.element()).toHaveProperty('value', VALID.name);
+    expect(form.email.element()).toHaveProperty('value', VALID.email);
+    expect(form.message.element()).toHaveProperty('value', VALID.message);
+
+    if (reply.status === 'error' && reply.fieldErrors !== null) {
+      await expect.element(form.email).toHaveFocus();
+    }
+
+    await form.screen.unmount();
+  }
+});
+
+caseTest('contact-form.resets-on-sent', 'fields empty after sent', async () => {
+  const form = await mountForm(answering({ status: 'sent' }));
+
+  await fillValid(form);
+  await form.submit.click();
+  await expect.element(form.status).toHaveTextContent('Message sent. A reply comes by email.');
+
+  await expect
+    .poll(() => {
+      return form.name.element();
+    })
+    .toHaveProperty('value', '');
+
+  expect(form.email.element()).toHaveProperty('value', '');
+  expect(form.message.element()).toHaveProperty('value', '');
+});
+
 caseTest('contact-form.status-live', 'status region present and empty', async () => {
   const form = await mountForm(answering({ status: 'idle' }));
 
@@ -349,6 +399,19 @@ caseTest('copy-email.copied', 'Copied for 1.6 s', async () => {
   await expect
     .element(screen.getByRole('button', { name: 'Copy', exact: true }), { timeout: 1000 })
     .toBeVisible();
+});
+
+caseTest('copy-email.live-region', 'polite region announces Copied', async () => {
+  vi.spyOn(window.navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+  const screen = await render(<CopyEmail email={EMAIL} copy={COPY_LABELS} />);
+  const region = screen.getByRole('status');
+
+  expect(region.element().textContent).toBe('');
+  expect(region.element().getAttribute('aria-live')).toBe('polite');
+
+  await screen.getByRole('button', { name: 'Copy', exact: true }).click();
+  await expect.element(region).toHaveTextContent('Copied');
+  await expect.element(region, { timeout: 2500 }).toHaveTextContent('');
 });
 
 caseTest('copy-email.fallback', 'selects the text when the clipboard fails', async () => {

@@ -29,6 +29,13 @@ export const WorldStage = ({ generation, labels, navTemplate }: WorldStageProps)
   const overlayRef = useRef<HTMLDivElement>(null);
   const stickRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
+  const labelsRef = useRef(labels);
+  const templateRef = useRef(navTemplate);
+
+  useEffect(() => {
+    labelsRef.current = labels;
+    templateRef.current = navTemplate;
+  }, [labels, navTemplate]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -67,8 +74,8 @@ export const WorldStage = ({ generation, labels, navTemplate }: WorldStageProps)
           overlay,
           stick: { root, knob },
           data,
-          labels,
-          navTemplate,
+          labels: labelsRef.current,
+          navTemplate: templateRef.current,
           store: worldStore,
         });
 
@@ -94,7 +101,7 @@ export const WorldStage = ({ generation, labels, navTemplate }: WorldStageProps)
       runtime = null;
       canvas.remove();
     };
-  }, [generation, labels, navTemplate]);
+  }, [generation]);
 
   return (
     <div ref={stageRef} className="world-stage" aria-hidden="true">

@@ -7,7 +7,7 @@ export const Systems = () => {
     <>
       <p
         data-motion="tag"
-        className="mb-2.5 flex items-center gap-2.5 font-pixel text-[0.9rem] text-signal before:size-2.5 before:bg-signal before:content-['']"
+        className="mb-2.5 flex items-center gap-2.5 font-pixel text-eyebrow text-signal before:size-2.5 before:bg-signal before:content-['']"
       >
         {COPY.tag}
       </p>
@@ -15,7 +15,7 @@ export const Systems = () => {
       <h2
         id="systems-title"
         data-motion="title"
-        className="m-0 font-pixel text-[1.4rem] leading-[1.05] font-semibold text-balance text-white wide:text-[1.75rem]"
+        className="m-0 font-pixel text-heading leading-display font-semibold text-balance text-white wide:text-heading-wide"
       >
         {COPY.title}
       </h2>
@@ -25,10 +25,10 @@ export const Systems = () => {
       </p>
 
       <div className="mt-4 grid gap-3.5">
-        {COPY.groups.slice(0, 3).map((group) => {
+        {COPY.groups.map((group) => {
           return (
             <div key={group.title} data-motion="item">
-              <h3 className="m-0 mb-1.5 font-pixel text-[1.1rem] font-medium text-white">
+              <h3 className="m-0 mb-1.5 font-pixel text-subhead font-medium text-white">
                 {group.title}
 
                 {group.years === null ? null : (
@@ -42,7 +42,7 @@ export const Systems = () => {
                     <li
                       key={item.name}
                       data-motion="chip"
-                      className="bg-surface px-2.25 py-0.75 text-[0.85rem] shadow-[inset_0_0_0_1px_var(--color-edge-dim)]"
+                      className="bg-surface px-2.25 py-0.75 text-chip shadow-outline"
                     >
                       {item.name}
 

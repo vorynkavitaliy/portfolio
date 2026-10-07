@@ -99,6 +99,26 @@ export const CONTACT_CASES = [
     expected: 'the status line has role status and is empty before any submit',
   },
   {
+    id: 'contact-form.keeps-values-on-error',
+    source: 'wcag',
+    reference: 'WCAG 2.2 3.3.7 Redundant Entry',
+    expected:
+      'after RATE_LIMITED, SEND_FAILED and server INVALID_INPUT the typed name, email and message are intact and focus lands on the first invalid field with its value',
+  },
+  {
+    id: 'contact-form.resets-on-sent',
+    source: 'wcag',
+    reference: 'WCAG 2.2 3.3.7 Redundant Entry (reset only after success)',
+    expected: 'after a sent result the name, email and message fields are empty',
+  },
+  {
+    id: 'copy-email.live-region',
+    source: 'wcag',
+    reference: 'WCAG 4.1.3 status messages',
+    expected:
+      'a polite status region is empty before the click and announces «Copied» after it, then empties',
+  },
+  {
     id: 'copy-email.idle',
     source: 'owner-2026-10-07',
     reference: 'stations.content.ts contact.copy',

@@ -3,7 +3,7 @@ import { FLIGHT_KEY_CODES, createSteer, steerFrom } from '@/scene/flight/steer';
 import { createStick } from '@/scene/input/stick';
 
 import type { Steer, SteerTarget } from '@/scene/flight/flight.types';
-import type { StickElements } from '@/scene/input/stick';
+import type { StickElements } from '@/scene/runtime/runtime.types';
 
 const SHIFT_CODES: ReadonlySet<string> = new Set(['ShiftLeft', 'ShiftRight']);
 const EDITABLE_TAGS: ReadonlySet<string> = new Set(['INPUT', 'TEXTAREA', 'SELECT']);

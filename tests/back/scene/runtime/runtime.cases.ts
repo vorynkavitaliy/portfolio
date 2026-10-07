@@ -373,6 +373,13 @@ export const RUNTIME_CASES = [
     expected: 'wrong array class, missing field, unknown type, non-object → null',
   },
   {
+    id: 'loader.message.lengths',
+    source: 'scene-rule',
+    reference: 'typescript.md §6 (zod at every runtime boundary); plan §5 WorldData sizes',
+    expected:
+      'heights 128², stationTops 27, pixelTexture 1024, minimap 128²·4; any other length → null',
+  },
+  {
     id: 'loader.message.error',
     source: 'scene-rule',
     reference: 'plan §5.3 WorldMessage',
@@ -405,6 +412,25 @@ export const RUNTIME_CASES = [
     source: 'scene-rule',
     reference: 'scene-3d.md §4 (dispose every geometry and material)',
     expected: 'dispose fires on every geometry and the material',
+  },
+  {
+    id: 'loop.single-callback',
+    source: 'scene-rule',
+    reference: 'scene-3d.md §2 (one requestAnimationFrame loop); review B3 round 1 finding 1',
+    expected:
+      'store updates inside a frame (dock, reset, slow) and repeated starts leave exactly one pending callback and one start',
+  },
+  {
+    id: 'loop.restart-in-frame',
+    source: 'scene-rule',
+    reference: 'scene-3d.md §2; review B3 round 1 finding 1 (reset or view change inside a frame)',
+    expected: 'a stop then start inside one frame leaves one pending callback and a second start',
+  },
+  {
+    id: 'loop.stops',
+    source: 'scene-rule',
+    reference: 'scene-3d.md §2 (a gated loop renders zero frames); §6 (no loop while hidden)',
+    expected: 'stop cancels the pending frame; a stop inside a frame schedules nothing',
   },
   {
     id: 'start-error.reason',

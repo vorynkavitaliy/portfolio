@@ -1,12 +1,9 @@
+import { MINIMAP_MARKERS } from '@/scene/world/palette';
 import { MAP_HALF, MAP_SIZE } from '@/scene/world/world.constants';
 
 export const MAP_PICK_RADIUS = 14;
 
 const REFERENCE_SIZE = 160;
-const COLOR_VISITED = '#ffaa00';
-const COLOR_PENDING = '#ffffff';
-const COLOR_CORE = '#000000';
-const COLOR_PLANE = '#ff5a5a';
 const MARKER_HALF = 3;
 const CORE_HALF = 1;
 const PLANE_NOSE = 8;
@@ -67,9 +64,9 @@ const drawStations = (
     const x = toPixel(station.x, frame.size);
     const z = toPixel(station.z, frame.size);
 
-    context.fillStyle = station.lit ? COLOR_VISITED : COLOR_PENDING;
+    context.fillStyle = station.lit ? MINIMAP_MARKERS.visited : MINIMAP_MARKERS.pending;
     context.fillRect(x - marker, z - marker, marker * 2, marker * 2);
-    context.fillStyle = COLOR_CORE;
+    context.fillStyle = MINIMAP_MARKERS.core;
     context.fillRect(x - core, z - core, core * 2, core * 2);
   }
 };
@@ -87,7 +84,7 @@ const drawPlane = (
   const nose = PLANE_NOSE * scale;
   const tail = PLANE_TAIL * scale;
 
-  context.fillStyle = COLOR_PLANE;
+  context.fillStyle = MINIMAP_MARKERS.plane;
   context.beginPath();
   context.moveTo(x + dx * nose, z + dz * nose);
   context.lineTo(x - dx * tail + dz * tail, z - dz * tail - dx * tail);

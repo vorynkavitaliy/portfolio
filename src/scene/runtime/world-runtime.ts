@@ -23,6 +23,7 @@ import { selectTarget } from '@/scene/nav/nav-math';
 import { createNavOverlay } from '@/scene/nav/nav-overlay';
 import { applyViewport, createCameraRig, type RigFrame } from '@/scene/runtime/camera-rig';
 import { createEffects, decayEffects, triggerTakeOff } from '@/scene/runtime/effects';
+import { createFrameLoop } from '@/scene/runtime/frame-loop';
 import { shouldRun } from '@/scene/runtime/loop-gate';
 import {
   bloomAllowed,
@@ -80,7 +81,6 @@ type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 type MapStation = { x: number; z: number; lit: boolean };
 
 export const MARKS = {
-  generated: 'world:generated',
   ready: 'world:ready',
   firstFrame: 'world:first-frame',
 } as const;
@@ -141,6 +141,7 @@ export const startWorld = async (options: StartWorldOptions): Promise<WorldRunti
   const renderer: WebGLRenderer = createRenderer(canvas, profile);
 
   disposers.push(() => {
+    renderer.forceContextLoss();
     renderer.dispose();
   });
 
@@ -199,8 +200,13 @@ export const startWorld = async (options: StartWorldOptions): Promise<WorldRunti
       pixelTexture.dispose();
     });
 
-    const build = { data, profile, renderer, camera, pixelTexture };
-    const modules: SceneModule[] = [createTerrainModule(data.chunks, pixelTexture), ...createEnvironment(build)];
+    const build = { data, profile, renderer, scene, camera, pixelTexture };
+
+    const modules: SceneModule[] = [
+      createTerrainModule(data.chunks, pixelTexture),
+      ...createEnvironment(build),
+    ];
+
     const actors = createActors(build);
 
     modules.push(...actors.modules);
@@ -369,8 +375,6 @@ export const startWorld = async (options: StartWorldOptions): Promise<WorldRunti
 
     let introStart: number | null = null;
     let autoDock: ReturnType<typeof setTimeout> | null = null;
-    let raf = 0;
-    let running = false;
     let lastNow = 0;
     let audioOn = false;
     let navVisible = false;
@@ -423,12 +427,6 @@ export const startWorld = async (options: StartWorldOptions): Promise<WorldRunti
     };
 
     const step = (now: number): void => {
-      raf = 0;
-
-      if (!running) {
-        return;
-      }
-
       const frameMs = now - lastNow;
       const dt = Math.min(MAX_DT, Math.max(0, frameMs / 1000));
 
@@ -484,8 +482,6 @@ export const startWorld = async (options: StartWorldOptions): Promise<WorldRunti
         firstFrame = false;
         markOnce(MARKS.firstFrame);
       }
-
-      raf = requestAnimationFrame(step);
     };
 
     const syncAudio = (desired: boolean): void => {
@@ -522,6 +518,20 @@ export const startWorld = async (options: StartWorldOptions): Promise<WorldRunti
       }, SCENE_TIMING.autoDockMs);
     };
 
+    const loop = createFrameLoop({
+      request: (callback) => {
+        return requestAnimationFrame(callback);
+      },
+      cancel: (handle) => {
+        cancelAnimationFrame(handle);
+      },
+      onStart: () => {
+        lastNow = performance.now();
+        monitor.restart(lastNow);
+      },
+      tick: step,
+    });
+
     const sync = (): void => {
       if (disposed) {
         return;
@@ -536,7 +546,6 @@ export const startWorld = async (options: StartWorldOptions): Promise<WorldRunti
         contextLost,
       });
 
-      running = run;
       input.setEnabled(run);
       syncAudio(state.sound && run);
 
@@ -544,23 +553,11 @@ export const startWorld = async (options: StartWorldOptions): Promise<WorldRunti
         startIntro(performance.now());
       }
 
-      if (run && raf === 0) {
-        lastNow = performance.now();
-        monitor.restart(lastNow);
-        raf = requestAnimationFrame(step);
-      } else if (!run && raf !== 0) {
-        cancelAnimationFrame(raf);
-        raf = 0;
-      }
+      loop.setRunning(run);
     };
 
     disposers.push(() => {
-      running = false;
-
-      if (raf !== 0) {
-        cancelAnimationFrame(raf);
-        raf = 0;
-      }
+      loop.stop();
 
       if (autoDock !== null) {
         clearTimeout(autoDock);

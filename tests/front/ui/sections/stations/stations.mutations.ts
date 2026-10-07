@@ -1,4 +1,4 @@
-import type { StationsCaseId } from '@tests/front/ui/sections/stations.cases';
+import type { StationsCaseId } from '@tests/front/ui/sections/stations/stations.cases';
 
 export type StationsMutation = Readonly<{
   id: string;
@@ -18,8 +18,9 @@ export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
   {
     id: 'home-h1-demoted',
     file: HOME,
-    find: '<h1\n',
-    replace: '<h2\n',
+    find: '<h1\n        id="home-base-title"\n        data-motion="title"\n        className="m-0 font-pixel text-title leading-display font-semibold text-balance text-white wide:text-title-wide"\n      >\n        {COPY.title}\n      </h1>',
+    replace:
+      '<h2\n        id="home-base-title"\n        data-motion="title"\n        className="m-0 font-pixel text-title leading-display font-semibold text-balance text-white wide:text-title-wide"\n      >\n        {COPY.title}\n      </h2>',
     caseIds: ['stations.home-base.heading', 'stations.heading-order'],
   },
   {
@@ -137,8 +138,9 @@ export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
   {
     id: 'brief-h2-demoted',
     file: BRIEF,
-    find: '<h2\n',
-    replace: '<h3\n',
+    find: '<h2\n        id={`${station}-title`}\n        data-motion="title"\n        className="m-0 font-pixel text-heading leading-display font-semibold text-balance text-white wide:text-heading-wide"\n      >\n        {copy.title}\n      </h2>',
+    replace:
+      '<h3\n        id={`${station}-title`}\n        data-motion="title"\n        className="m-0 font-pixel text-heading leading-display font-semibold text-balance text-white wide:text-heading-wide"\n      >\n        {copy.title}\n      </h3>',
     caseIds: ['stations.brief.heading', 'stations.heading-order'],
   },
   {
@@ -270,8 +272,9 @@ export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
   {
     id: 'systems-h3-demoted',
     file: SYSTEMS,
-    find: '<h3 className',
-    replace: '<h4 className',
+    find: '<h3 className="m-0 mb-1.5 font-pixel text-subhead font-medium text-white">\n                {group.title}\n\n                {group.years === null ? null : (\n                  <em className="ml-1 text-signal not-italic">{group.years}</em>\n                )}\n              </h3>',
+    replace:
+      '<h4 className="m-0 mb-1.5 font-pixel text-subhead font-medium text-white">\n                {group.title}\n\n                {group.years === null ? null : (\n                  <em className="ml-1 text-signal not-italic">{group.years}</em>\n                )}\n              </h4>',
     caseIds: ['stations.systems'],
   },
   {
@@ -305,8 +308,9 @@ export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
   {
     id: 'log-unordered',
     file: LOG,
-    find: '<ol className',
-    replace: '<ul className',
+    find: '<ol className="m-0 mt-4 grid list-none gap-3 p-0">\n        {COPY.entries.map((entry) => {\n          return (\n            <li key={entry.years} data-motion="item" className="grid log-grid gap-3">\n              <span className="pt-0.5 font-pixel text-years text-signal">{entry.years}</span>\n\n              <div>\n                <h3 className="m-0 font-pixel text-base font-medium text-white">{entry.role}</h3>\n\n                <p className="m-0 text-base text-pretty text-muted">{entry.summary}</p>\n              </div>\n            </li>\n          );\n        })}\n      </ol>',
+    replace:
+      '<ul className="m-0 mt-4 grid list-none gap-3 p-0">\n        {COPY.entries.map((entry) => {\n          return (\n            <li key={entry.years} data-motion="item" className="grid log-grid gap-3">\n              <span className="pt-0.5 font-pixel text-years text-signal">{entry.years}</span>\n\n              <div>\n                <h3 className="m-0 font-pixel text-base font-medium text-white">{entry.role}</h3>\n\n                <p className="m-0 text-base text-pretty text-muted">{entry.summary}</p>\n              </div>\n            </li>\n          );\n        })}\n      </ul>',
     caseIds: ['stations.flight-log'],
   },
   {

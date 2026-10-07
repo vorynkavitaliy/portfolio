@@ -2,17 +2,17 @@
 
 import { expect, test } from 'vitest';
 
-import { STATIONS_CASES } from '@tests/front/ui/sections/stations.cases';
-import source from '@tests/front/ui/sections/stations.test.tsx?raw';
+import { STATION_FRAME_CASES } from '@tests/front/ui/sections/station-frame/station-frame.cases';
+import source from '@tests/front/ui/sections/station-frame/station-frame.test.tsx?raw';
 
-const ALLOWED_SOURCES: readonly string[] = ['spec', 'prototype', 'content'];
+const ALLOWED_SOURCES: readonly string[] = ['spec', 'prototype', 'content', 'design'];
 
 test('every case id has a test and every test id exists in the catalogue', () => {
   const used: readonly string[] = [...source.matchAll(/caseTest\(\s*'([^']+)'/g)].map((match) => {
     return match[1] ?? '';
   });
 
-  const known: readonly string[] = STATIONS_CASES.map((entry) => {
+  const known: readonly string[] = STATION_FRAME_CASES.map((entry) => {
     return entry.id;
   });
 
@@ -32,7 +32,7 @@ test('every case id has a test and every test id exists in the catalogue', () =>
 });
 
 test('every case names an allowed source and a reference', () => {
-  for (const entry of STATIONS_CASES) {
+  for (const entry of STATION_FRAME_CASES) {
     expect(ALLOWED_SOURCES).toContain(entry.source);
     expect(entry.reference).not.toBe('');
   }

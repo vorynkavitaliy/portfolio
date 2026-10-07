@@ -11,7 +11,7 @@ export const MissionBrief = ({ station }: MissionBriefProps) => {
     <>
       <p
         data-motion="tag"
-        className="mb-2.5 flex items-center gap-2.5 font-pixel text-[0.9rem] text-signal before:size-2.5 before:bg-signal before:content-['']"
+        className="mb-2.5 flex items-center gap-2.5 font-pixel text-eyebrow text-signal before:size-2.5 before:bg-signal before:content-['']"
       >
         {copy.tag}
       </p>
@@ -19,7 +19,7 @@ export const MissionBrief = ({ station }: MissionBriefProps) => {
       <h2
         id={`${station}-title`}
         data-motion="title"
-        className="m-0 font-pixel text-[1.4rem] leading-[1.05] font-semibold text-balance text-white wide:text-[1.75rem]"
+        className="m-0 font-pixel text-heading leading-display font-semibold text-balance text-white wide:text-heading-wide"
       >
         {copy.title}
       </h2>
@@ -48,7 +48,7 @@ export const MissionBrief = ({ station }: MissionBriefProps) => {
             <li
               key={chip}
               data-motion="chip"
-              className="bg-surface px-2.25 py-0.75 text-[0.8rem] shadow-[inset_0_0_0_1px_var(--color-edge-dim)]"
+              className="bg-surface px-2.25 py-0.75 text-chip-sm shadow-outline"
             >
               {chip}
             </li>
@@ -58,11 +58,11 @@ export const MissionBrief = ({ station }: MissionBriefProps) => {
 
       <p
         data-motion="result"
-        className="mt-4 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 bg-result-bg px-3 py-2.5 shadow-[inset_0_0_0_1px_var(--color-result-edge)]"
+        className="mt-4 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 bg-result-bg px-3 py-2.5 shadow-result"
       >
-        <b className="font-pixel text-[1.25rem] font-normal text-signal">{copy.result.value}</b>
+        <b className="font-pixel font-normal text-signal text-stat-value">{copy.result.value}</b>
 
-        <span className="text-[0.9rem] text-result-text">{copy.result.caption}</span>
+        <span className="text-base text-result-text">{copy.result.caption}</span>
       </p>
     </>
   );

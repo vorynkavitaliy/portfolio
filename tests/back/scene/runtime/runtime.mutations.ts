@@ -15,7 +15,8 @@ const CONSTANTS = 'src/scene/runtime/runtime.constants.ts';
 const EFFECTS = 'src/scene/runtime/effects.ts';
 const RIG = 'src/scene/runtime/camera-rig.ts';
 const CONTROLLER = 'src/scene/runtime/world-controller.ts';
-const LOADER = 'src/scene/scene-loader.client.tsx';
+const LOOP = 'src/scene/runtime/frame-loop.ts';
+const LOADER = 'src/scene/runtime/world-message.ts';
 const PIXEL = 'src/scene/visuals/pixel-texture.ts';
 const TERRAIN = 'src/scene/visuals/terrain.ts';
 
@@ -387,9 +388,16 @@ export const RUNTIME_MUTATIONS: readonly RuntimeMutation[] = [
   {
     id: 'loader.no-array-check',
     file: LOADER,
-    find: 'heights: z.instanceof(Int16Array),',
-    replace: 'heights: z.unknown(),',
+    find: 'z.instanceof(Int16Array).check(lengthIs(HEIGHTS_LENGTH))',
+    replace: 'z.unknown()',
     caseIds: ['loader.message.rejects'],
+  },
+  {
+    id: 'loader.no-length-check',
+    file: LOADER,
+    find: 'return array.length === length;',
+    replace: 'return true;',
+    caseIds: ['loader.message.lengths'],
   },
   {
     id: 'loader.no-progress',
@@ -460,5 +468,26 @@ export const RUNTIME_MUTATIONS: readonly RuntimeMutation[] = [
     find: "antialias: profile === 'desktop',",
     replace: 'antialias: true,',
     caseIds: ['renderer.attributes'],
+  },
+  {
+    id: 'loop.reschedules-always',
+    file: LOOP,
+    find: 'if (looping && pending === null) {',
+    replace: 'if (looping) {',
+    caseIds: ['loop.single-callback', 'loop.restart-in-frame'],
+  },
+  {
+    id: 'loop.start-when-looping',
+    file: LOOP,
+    find: '    if (looping) {\n      return;\n    }\n\n    looping = true;',
+    replace: '    looping = true;',
+    caseIds: ['loop.single-callback'],
+  },
+  {
+    id: 'loop.stop-keeps-pending',
+    file: LOOP,
+    find: '      cancel(pending);\n',
+    replace: '',
+    caseIds: ['loop.stops'],
   },
 ];

@@ -1,4 +1,4 @@
-export type StationFrameCaseSource = 'spec' | 'prototype' | 'content';
+export type StationFrameCaseSource = 'spec' | 'prototype' | 'content' | 'design';
 
 export type StationFrameCase = Readonly<{
   id: string;
@@ -59,6 +59,12 @@ export const STATION_FRAME_CASES = [
     reference: 'FR-025 (Take off button on the docked panel)',
     expected:
       'a click on the docked panel button dispatches {type take-off} exactly once; the label is "Take off"',
+  },
+  {
+    id: 'station-frame.touch-target',
+    source: 'design',
+    reference: 'styling.md §2 touch targets 44 px on (pointer: coarse)',
+    expected: 'the Take off button carries coarse:h-11 and coarse:min-w-11',
   },
   {
     id: 'station-frame.take-off-keyboard',

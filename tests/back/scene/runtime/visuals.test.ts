@@ -11,7 +11,7 @@ import { caseTest } from '@tests/back/scene/runtime/runtime.case-test';
 import { realData } from '@tests/back/scene/world/world.fixture';
 import { contextAttributesFor } from '@/scene/runtime/renderer';
 import { failReasonOf, WorldStartError } from '@/scene/runtime/world-start-error';
-import { parseWorldMessage } from '@/scene/scene-loader.client';
+import { parseWorldMessage } from '@/scene/runtime/world-message';
 import { createPixelTexture, flipRows } from '@/scene/visuals/pixel-texture';
 import { createTerrainModule } from '@/scene/visuals/terrain';
 
@@ -150,7 +150,13 @@ caseTest('terrain.dispose', 'geometries and material released', () => {
     });
   }
 
-  meshes[0]?.material.addEventListener('dispose', () => {
+  const material = meshes[0]?.material;
+
+  if (material === undefined || Array.isArray(material)) {
+    throw new Error('terrain material missing');
+  }
+
+  material.addEventListener('dispose', () => {
     disposed.push('material');
   });
 

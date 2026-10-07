@@ -1,4 +1,4 @@
-import type { StationFrameCaseId } from '@tests/front/ui/sections/station-frame.cases';
+import type { StationFrameCaseId } from '@tests/front/ui/sections/station-frame/station-frame.cases';
 
 export type StationFrameMutation = Readonly<{
   id: string;
@@ -179,5 +179,12 @@ export const STATION_FRAME_MUTATIONS: readonly StationFrameMutation[] = [
     find: '      {children}\n',
     replace: '',
     caseIds: ['station-frame.contract'],
+  },
+  {
+    id: 'touch-target-dropped',
+    file: FILE,
+    find: ' coarse:h-11 coarse:min-w-11',
+    replace: '',
+    caseIds: ['station-frame.touch-target'],
   },
 ];

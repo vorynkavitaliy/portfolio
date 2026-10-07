@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 
-import { caseTest } from '@tests/front/ui/sections/station-frame.case-test';
+import { caseTest } from '@tests/front/ui/sections/station-frame/station-frame.case-test';
 import { INITIAL_WORLD, worldStore } from '@/core/world/world-store';
 import type { StationId } from '@/core/world/stations';
 import type { WorldCommand, WorldSnapshot } from '@/core/world/world.types';
@@ -146,6 +146,14 @@ caseTest('station-frame.take-off-dispatch', 'click dispatches take-off once', as
 
   expect(handle).toHaveBeenCalledTimes(1);
   expect(handle).toHaveBeenCalledWith({ type: 'take-off' });
+});
+
+caseTest('station-frame.touch-target', 'coarse pointers get a 44 px target', async () => {
+  setState(dockedAt('systems'));
+  await renderFrame();
+
+  expect(buttonOf()?.classList.contains('coarse:h-11')).toBe(true);
+  expect(buttonOf()?.classList.contains('coarse:min-w-11')).toBe(true);
 });
 
 caseTest('station-frame.take-off-keyboard', 'Enter and Space press the button', async () => {

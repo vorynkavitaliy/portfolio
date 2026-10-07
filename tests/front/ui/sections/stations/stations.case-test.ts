@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 
-import type { StationsCaseId } from '@tests/front/ui/sections/stations.cases';
+import type { StationsCaseId } from '@tests/front/ui/sections/stations/stations.cases';
 
 export const caseTest = (
   id: StationsCaseId,

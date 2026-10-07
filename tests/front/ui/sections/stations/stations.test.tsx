@@ -2,7 +2,7 @@ import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, expect } from 'vitest';
 import { render } from 'vitest-browser-react';
 
-import { caseTest } from '@tests/front/ui/sections/stations.case-test';
+import { caseTest } from '@tests/front/ui/sections/stations/stations.case-test';
 import { ANALYTICS_EVENT } from '@/core/analytics/analytics';
 import { FlightLog } from '@/sections/flight-log/flight-log.component';
 import { HomeBase } from '@/sections/home-base/home-base.component';
@@ -332,6 +332,10 @@ caseTest('stations.heading-order', 'one h1, an h2 per section', async () => {
     ).size,
   ).toBe(7);
 
+  for (const heading of document.querySelectorAll('h1, h2')) {
+    expect(heading.id).toMatch(/-title$/);
+  }
+
   for (const section of document.querySelectorAll('section')) {
     const levels = [...section.querySelectorAll('h1, h2, h3')].map((heading) => {
       return heading.tagName;
@@ -363,7 +367,7 @@ caseTest('stations.motion', 'motion targets are present', async () => {
   expect(home && has(home, 'stat')).toBe(true);
   expect(home && has(home, 'stat-value')).toBe(true);
   expect(home && has(home, 'chip')).toBe(true);
-  expect(home && has(home, 'lede')).toBe(true);
+  expect(home?.querySelectorAll('[data-motion="lede"]')).toHaveLength(2);
 
   for (const brief of [sections[1], sections[2], sections[3], sections[4], sections[7]]) {
     expect(brief && has(brief, 'lede')).toBe(true);

@@ -5,6 +5,8 @@ export type TextHolder = { textContent: string | null };
 
 export type RollTarget = Readonly<{ prefix: string; value: number; suffix: string }>;
 
+const finalTexts = new WeakMap<TextHolder, string>();
+
 const ROLL_PATTERN = /^(\D*)(\d+)(.*)$/;
 
 export const parseRollTarget = (text: string): RollTarget | null => {
@@ -29,7 +31,9 @@ export const addNumberRolls = (
   tween: MotionTween,
 ): (() => void) => {
   const restores: readonly (() => void)[] = holders.flatMap((holder, index) => {
-    const original: string = holder.textContent ?? '';
+    const original: string = finalTexts.get(holder) ?? holder.textContent ?? '';
+
+    finalTexts.set(holder, original);
     const target: RollTarget | null = parseRollTarget(original);
 
     if (target === null) {

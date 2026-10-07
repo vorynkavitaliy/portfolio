@@ -1,11 +1,17 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState, type SubmitEvent } from 'react';
-import * as z from 'zod/mini';
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  type SubmitEvent,
+} from 'react';
 
 import { track } from '@/core/analytics/analytics';
 import { worldStore } from '@/core/world/world-store';
-import { CONTACT_LIMITS, contactSchema, fieldErrorsOf } from '@/sections/contact/contact.schema';
+import { CONTACT_LIMITS } from '@/sections/contact/contact.limits';
 
 import type { ContactFormCopy } from '@/content/content.types';
 import type {
@@ -24,6 +30,10 @@ type ContactFormProps = Readonly<{
 const FIELD_ORDER: readonly ContactField[] = ['name', 'email', 'message'];
 
 const IDLE_STATE: ContactFormState = { status: 'idle' };
+
+const loadSchema = () => {
+  return import('@/sections/contact/contact.schema');
+};
 
 const readText = (formData: FormData, name: string): string => {
   const value: FormDataEntryValue | null = formData.get(name);
@@ -64,6 +74,7 @@ export const ContactForm = ({ action, copy }: ContactFormProps) => {
   const [startedAt, setStartedAt] = useState<string>('');
   const [clientErrors, setClientErrors] = useState<ContactFieldErrors | null>(null);
   const handledState = useRef<ContactFormState>(IDLE_STATE);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     const timer: number = window.setTimeout(() => {
@@ -93,6 +104,7 @@ export const ContactForm = ({ action, copy }: ContactFormProps) => {
     handledState.current = state;
 
     if (state.status === 'sent') {
+      formRef.current?.reset();
       worldStore.dispatch({ type: 'celebrate-send' });
       track({ name: 'contact_sent' });
     }
@@ -102,8 +114,20 @@ export const ContactForm = ({ action, copy }: ContactFormProps) => {
     }
   }, [state]);
 
-  const handleSubmit = (event: SubmitEvent<HTMLFormElement>): void => {
+  const warmSchema = (): void => {
+    void loadSchema();
+  };
+
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+
     const formData = new FormData(event.currentTarget);
+
+    const { z, contactSchema, fieldErrorsOf } = await loadSchema().then(async (schema) => {
+      const zod = await import('zod/mini');
+
+      return { z: zod, ...schema };
+    });
 
     const result = z.safeParse(contactSchema, {
       name: readText(formData, 'name'),
@@ -115,10 +139,12 @@ export const ContactForm = ({ action, copy }: ContactFormProps) => {
     if (result.success) {
       setClientErrors(null);
 
+      startTransition(() => {
+        formAction(formData);
+      });
+
       return;
     }
-
-    event.preventDefault();
 
     const errors: ContactFieldErrors = fieldErrorsOf(result.error);
 
@@ -142,7 +168,15 @@ export const ContactForm = ({ action, copy }: ContactFormProps) => {
   const status: string = statusText(state, clientErrors !== null, copy);
 
   return (
-    <form action={formAction} onSubmit={handleSubmit} noValidate data-contact-form="">
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={handleSubmit}
+      onFocus={warmSchema}
+      onInput={warmSchema}
+      noValidate
+      data-contact-form=""
+    >
       <input type="hidden" name="startedAt" value={startedAt} />
 
       <div className="row2">

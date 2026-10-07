@@ -1,16 +1,9 @@
 import * as z from 'zod/mini';
 
 import { CONTACT_FORM_COPY } from '@/content/contact-form.content';
+import { CONTACT_LIMITS } from '@/sections/contact/contact.limits';
 
 import type { ContactField, ContactFieldErrors } from '@/sections/contact/contact.types';
-
-export const CONTACT_LIMITS = {
-  name: 80,
-  email: 254,
-  messageMin: 10,
-  message: 4000,
-  website: 200,
-} as const;
 
 const CONTROL_CHARACTERS = /[\u0000-\u001F\u007F]/g;
 

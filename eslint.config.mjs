@@ -72,7 +72,7 @@ const NO_CLIENT_FILES = withDynamicSource(
 
 const SCENE_ONLY_VIA_LOADER = withDynamicSource(
   {
-    group: ['@/scene', '@/scene/*', '!@/scene/scene-loader.client'],
+    regex: '^@/scene(/(?!scene-loader\\.client$).*)?$',
     message: 'Sections reach the scene only through @/scene/scene-loader.client.',
   },
   '^@\\/scene(\\/(?!scene-loader\\.client$).*)?$',

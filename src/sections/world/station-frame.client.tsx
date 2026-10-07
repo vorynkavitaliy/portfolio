@@ -39,14 +39,14 @@ export const StationFrame = ({ station, takeOff, children }: StationFrameProps) 
       <span
         data-motion="wipe"
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[2] origin-left scale-x-0 bg-signal"
+        className="pointer-events-none absolute inset-0 z-2 origin-left scale-x-0 bg-signal"
       />
 
       {inWorld ? (
         <button
           type="button"
           onClick={handleTakeOff}
-          className="-mt-2 mr-0 mb-3.5 ml-auto block h-6.5 cursor-pointer border-0 bg-surface px-2.5 font-pixel text-[0.8rem] text-signal shadow-[inset_0_0_0_1px_var(--color-signal)] hover:bg-disc-hover"
+          className="-mt-2 mr-0 mb-3.5 ml-auto block h-6.5 cursor-pointer border-0 bg-surface px-2.5 font-pixel text-chip-sm text-signal shadow-outline-signal hover:bg-disc-hover coarse:h-11 coarse:min-w-11"
         >
           <span>{takeOff.label}</span>
 

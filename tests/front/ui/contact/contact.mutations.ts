@@ -135,7 +135,7 @@ export const CONTACT_MUTATIONS: readonly ContactMutation[] = [
   {
     id: 'pending-not-disabled',
     file: FORM,
-    find: '          disabled={pending}\n',
+    find: ' disabled={pending}',
     replace: '',
     caseIds: ['contact-form.pending'],
   },
@@ -272,5 +272,33 @@ export const CONTACT_MUTATIONS: readonly ContactMutation[] = [
     find: '{copied ? copy.done : copy.idle}',
     replace: '{copied ? copy.done : copy.done}',
     caseIds: ['copy-email.idle'],
+  },
+  {
+    id: 'reset-on-every-reply',
+    file: FORM,
+    find: '      event.preventDefault();\n      setClientErrors(null);\n',
+    replace: '      setClientErrors(null);\n',
+    caseIds: ['contact-form.keeps-values-on-error'],
+  },
+  {
+    id: 'no-preventDefault',
+    file: FORM,
+    find: '      event.preventDefault();\n      setClientErrors(null);\n',
+    replace: '      setClientErrors(null);\n\n      return;\n',
+    caseIds: ['contact-form.keeps-values-on-error'],
+  },
+  {
+    id: 'reset-on-sent-dropped',
+    file: FORM,
+    find: '      formRef.current?.reset();\n',
+    replace: '',
+    caseIds: ['contact-form.resets-on-sent'],
+  },
+  {
+    id: 'live-region-removed',
+    file: COPY,
+    find: "{copied ? copy.done : ''}",
+    replace: "{''}",
+    caseIds: ['copy-email.live-region'],
   },
 ];

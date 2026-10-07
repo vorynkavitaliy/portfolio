@@ -54,7 +54,7 @@ export const addStep = <Target extends string>(
   }
 };
 
-export const onSettled = (timeline: gsap.core.Timeline, settle: () => void): void => {
+export const onSettled = (timeline: gsap.core.Timeline, settle: () => void): (() => void) => {
   let settled = false;
 
   const once = (): void => {
@@ -72,4 +72,6 @@ export const onSettled = (timeline: gsap.core.Timeline, settle: () => void): voi
   gsap.context(() => {
     return once;
   });
+
+  return once;
 };

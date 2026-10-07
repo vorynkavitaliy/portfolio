@@ -1,4 +1,4 @@
-import type { Object3D, PerspectiveCamera, Texture, WebGLRenderer } from 'three';
+import type { Object3D, PerspectiveCamera, Scene, Texture, WebGLRenderer } from 'three';
 
 import type { PlaneState, Vec3 } from '@/scene/flight/flight.types';
 import type { WorldData } from '@/scene/world/world.types';
@@ -50,6 +50,7 @@ export type SceneBuildInput = Readonly<{
   data: WorldData;
   profile: Profile;
   renderer: WebGLRenderer;
+  scene: Scene;
   camera: PerspectiveCamera;
   pixelTexture: Texture;
 }>;

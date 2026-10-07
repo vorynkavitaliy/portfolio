@@ -1,6 +1,5 @@
 import type { StickState } from '@/scene/flight/flight.types';
-
-export type StickElements = Readonly<{ root: HTMLElement; knob: HTMLElement }>;
+import type { StickElements } from '@/scene/runtime/runtime.types';
 
 type MutableStick = { active: boolean; dx: number; dy: number };
 
