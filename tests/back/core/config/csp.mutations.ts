@@ -22,8 +22,8 @@ export const CSP_MUTATIONS: readonly CspMutation[] = [
   {
     id: 'script.unsafe-inline-added',
     file: CSP,
-    find: `"'strict-dynamic'"]`,
-    replace: `"'strict-dynamic'", "'unsafe-inline'"]`,
+    find: '    TURNSTILE_ORIGIN,\n  ];',
+    replace: `    TURNSTILE_ORIGIN,\n    "'unsafe-inline'",\n  ];`,
     caseIds: ['sec.csp.exact.production', 'sec.csp.exact.development', 'sec.csp.script.no-unsafe'],
   },
   {
@@ -53,5 +53,45 @@ export const CSP_MUTATIONS: readonly CspMutation[] = [
     find: ".toString('base64')",
     replace: ".toString('hex')",
     caseIds: ['sec.csp.nonce.uuid-base64'],
+  },
+  {
+    id: 'turnstile.script-dropped',
+    file: CSP,
+    find: '    "\'strict-dynamic\'",\n    TURNSTILE_ORIGIN,\n',
+    replace: '    "\'strict-dynamic\'",\n',
+    caseIds: ['sec.csp.exact.production', 'sec.csp.exact.development', 'sec.csp.turnstile.script'],
+  },
+  {
+    id: 'turnstile.frame-dropped',
+    file: CSP,
+    find: '    `frame-src ${TURNSTILE_ORIGIN}`,\n',
+    replace: '',
+    caseIds: ['sec.csp.exact.production', 'sec.csp.exact.development', 'sec.csp.turnstile.frame'],
+  },
+  {
+    id: 'turnstile.frame-wildcard',
+    file: CSP,
+    find: '`frame-src ${TURNSTILE_ORIGIN}`',
+    replace: '`frame-src ${TURNSTILE_ORIGIN} https:`',
+    caseIds: ['sec.csp.exact.production', 'sec.csp.exact.development', 'sec.csp.turnstile.frame'],
+  },
+  {
+    id: 'turnstile.connect-widened',
+    file: CSP,
+    find: `"connect-src 'self'",`,
+    replace: "`connect-src 'self' ${TURNSTILE_ORIGIN}`,",
+    caseIds: ['sec.csp.exact.production', 'sec.csp.exact.development', 'sec.csp.turnstile.frame'],
+  },
+  {
+    id: 'turnstile.script-wildcard',
+    file: CSP,
+    find: "const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';",
+    replace: "const TURNSTILE_ORIGIN = 'https://*.cloudflare.com';",
+    caseIds: [
+      'sec.csp.exact.production',
+      'sec.csp.exact.development',
+      'sec.csp.turnstile.script',
+      'sec.csp.turnstile.frame',
+    ],
   },
 ];

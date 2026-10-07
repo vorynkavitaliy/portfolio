@@ -26,7 +26,7 @@ test(caseTitle('spec.fallback.server-html-boot', 'boot state in HTML'), async ({
   expect(html).toContain('data-view="boot"');
   expect(html).toContain('data-boot="idle"');
 
-  const loader: string = /<div data-loader[\s\S]*?<button/.exec(html)?.[0] ?? '';
+  const loader: string = /<[a-z]+\b[^>]*\bdata-loader\b[\s\S]*?<button/.exec(html)?.[0] ?? '';
 
   expect(loader).toContain(WORLD_COPY.loader.name);
   expect(loader).toContain(WORLD_COPY.loader.line);

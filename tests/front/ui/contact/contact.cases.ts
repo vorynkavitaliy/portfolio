@@ -1,4 +1,5 @@
-export type ContactCaseSource = 'spec' | 'prototype' | 'wcag' | 'security-md' | 'owner-2026-10-07';
+export type ContactCaseSource =
+  'spec' | 'prototype' | 'wcag' | 'security-md' | 'owner-2026-10-07' | 'cloudflare-docs';
 
 export type ContactCase = Readonly<{
   id: string;
@@ -6,6 +7,12 @@ export type ContactCase = Readonly<{
   reference: string;
   expected: string;
 }>;
+
+const TURNSTILE =
+  'owner decision 2026-10-07 (Turnstile, closes Q-5): api.js loads on first form interaction, interaction-only widget with action contact, token sent as cf-turnstile-response, widget reset after each submit, a failed load still submits';
+
+const EXPLICIT_RENDER =
+  'cloudflare-docs https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/ (api.js?render=explicit, turnstile.render(container, { sitekey, action, appearance, callback }), turnstile.reset(widgetId))';
 
 export const CONTACT_CASES = [
   {
@@ -156,6 +163,55 @@ export const CONTACT_CASES = [
     source: 'spec',
     reference: 'SC-019 (email_copy once per click)',
     expected: 'one click dispatches exactly one email_copy event; rendering dispatches none',
+  },
+  {
+    id: 'contact-form.verification-failed',
+    source: 'owner-2026-10-07',
+    reference: `${TURNSTILE}; contact-form.content.ts status.verificationFailed`,
+    expected:
+      'VERIFICATION_FAILED shows exactly «Message not sent. The spam check did not pass. Write to the email address above.»',
+  },
+  {
+    id: 'contact-form.turnstile-lazy',
+    source: 'owner-2026-10-07',
+    reference: `${TURNSTILE}; rules/performance.md §3 (third-party script never in first load)`,
+    expected:
+      'before any interaction no Turnstile script is in the document and nothing is rendered; the first focus renders one widget',
+  },
+  {
+    id: 'contact-form.turnstile-render',
+    source: 'cloudflare-docs',
+    reference: `${EXPLICIT_RENDER}; ${TURNSTILE}`,
+    expected:
+      'the widget renders once into a container inside the form with the site key, action contact, appearance interaction-only and response-field false',
+  },
+  {
+    id: 'contact-form.turnstile-token',
+    source: 'owner-2026-10-07',
+    reference: `${TURNSTILE}; ${EXPLICIT_RENDER}`,
+    expected:
+      'a valid submit sends the callback token as cf-turnstile-response and resets the widget once with its id; the next submit waits for the next token',
+  },
+  {
+    id: 'contact-form.turnstile-waits',
+    source: 'owner-2026-10-07',
+    reference: TURNSTILE,
+    expected:
+      'a valid submit before the token exists calls the action only after the callback fires, with that token',
+  },
+  {
+    id: 'contact-form.turnstile-no-key',
+    source: 'owner-2026-10-07',
+    reference: TURNSTILE,
+    expected:
+      'without a site key nothing is loaded or rendered and a valid submit sends an empty cf-turnstile-response',
+  },
+  {
+    id: 'contact-form.turnstile-script',
+    source: 'cloudflare-docs',
+    reference: `${EXPLICIT_RENDER}; ${TURNSTILE}`,
+    expected:
+      'with no turnstile global the first focus appends one async script whose src is exactly https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit; a second focus appends none; when it fails to load a valid submit still reaches the action with an empty token',
   },
 ] as const satisfies readonly ContactCase[];
 

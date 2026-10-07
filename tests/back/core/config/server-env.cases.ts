@@ -1,4 +1,5 @@
-export type ServerEnvCaseSource = 'security-md' | 'rfc-6335' | 'owner-2026-10-07';
+export type ServerEnvCaseSource =
+  'security-md' | 'rfc-6335' | 'owner-2026-10-07' | 'cloudflare-docs';
 
 export type ServerEnvCase = Readonly<{
   id: string;
@@ -13,6 +14,13 @@ const SECURITY_SECRETS =
 const CONTACT_ENV = 'rules/security.md §2 «Secrets» (SMTP and contact variables)';
 
 const OWNER_ENV = 'owner decision 2026-10-07 (env contract of the contact form)';
+
+const TURNSTILE_ENV =
+  'owner decision 2026-10-07 (Turnstile: TURNSTILE_SECRET_KEY server-only, TURNSTILE_SITE_KEY public, passed as a prop)';
+
+const TURNSTILE_TESTING =
+  'cloudflare-docs https://developers.cloudflare.com/turnstile/troubleshooting/testing/ (test secrets 1x…AA, 2x…AA, 3x…AA)';
+
 const PORTS = 'RFC 6335 §6 (ports are 16-bit integers, 0 reserved)';
 
 export const SERVER_ENV_CASES = [
@@ -131,6 +139,33 @@ export const SERVER_ENV_CASES = [
     source: 'security-md',
     reference: SECURITY_SECRETS,
     expected: 'getServerEnv throws naming the variable when process.env lacks SMTP_PASS',
+  },
+  {
+    id: 'sec.env.turnstile.secret-present',
+    source: 'owner-2026-10-07',
+    reference: TURNSTILE_ENV,
+    expected: 'a TURNSTILE_SECRET_KEY with surrounding spaces is returned trimmed',
+  },
+  {
+    id: 'sec.env.turnstile.secret-missing',
+    source: 'security-md',
+    reference: `${SECURITY_SECRETS}; ${TURNSTILE_ENV}`,
+    expected:
+      'a missing or blank TURNSTILE_SECRET_KEY throws naming TURNSTILE_SECRET_KEY and never its value; getTurnstileSecret reads process.env',
+  },
+  {
+    id: 'sec.env.turnstile.test-secret-production',
+    source: 'cloudflare-docs',
+    reference: `${TURNSTILE_TESTING}; ${SECURITY_SECRETS}; owner deploy 2026-10-07 (self-hosted VPS, no VERCEL_ENV)`,
+    expected:
+      'each of the three Cloudflare test secrets throws when NODE_ENV is production and SITE_URL is a public host, and is accepted when NODE_ENV is production on localhost, 127.0.0.1 or [::1] (e2e) or when NODE_ENV is not production; a real secret is accepted on the public host',
+  },
+  {
+    id: 'sec.env.turnstile.site-key',
+    source: 'owner-2026-10-07',
+    reference: TURNSTILE_ENV,
+    expected:
+      'a TURNSTILE_SITE_KEY is returned trimmed; a missing or blank one gives null instead of throwing; getTurnstileSiteKey reads process.env',
   },
 ] as const satisfies readonly ServerEnvCase[];
 

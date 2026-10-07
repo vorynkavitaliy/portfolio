@@ -4,9 +4,10 @@ import { expect, test } from 'vitest';
 
 import { CONTACT_CASES } from '@tests/front/ui/contact/contact.cases';
 import schemaChunkSource from '@tests/front/ui/contact/contact-schema-chunk.test.tsx?raw';
+import turnstileSource from '@tests/front/ui/contact/contact-turnstile.test.tsx?raw';
 import formSource from '@tests/front/ui/contact/contact.test.tsx?raw';
 
-const source: string = `${formSource}\n${schemaChunkSource}`;
+const source: string = `${formSource}\n${schemaChunkSource}\n${turnstileSource}`;
 
 const ALLOWED_SOURCES: readonly string[] = [
   'spec',
@@ -14,6 +15,7 @@ const ALLOWED_SOURCES: readonly string[] = [
   'wcag',
   'security-md',
   'owner-2026-10-07',
+  'cloudflare-docs',
 ];
 
 test('every case id has a test and every test id exists in the catalogue', () => {

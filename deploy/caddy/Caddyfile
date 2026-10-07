@@ -1,0 +1,47 @@
+{
+	admin localhost:2019
+	auto_https disable_certs
+	servers {
+		import /etc/caddy/cloudflare-ips.caddy
+		client_ip_headers CF-Connecting-IP
+		protocols h1 h2
+		timeouts {
+			read_header 10s
+			read_body 15s
+			write 30s
+			idle 2m
+		}
+		max_header_size 16KB
+	}
+}
+
+(origin_tls) {
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+}
+
+www.{$SITE_DOMAIN} {
+	import origin_tls
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+{$SITE_DOMAIN} {
+	import origin_tls
+
+	request_body {
+		max_size 32KB
+	}
+
+	reverse_proxy {$UPSTREAM:127.0.0.1:3000} {
+		header_up X-Real-IP {client_ip}
+		header_up -CF-Connecting-IP
+		transport http {
+			dial_timeout 5s
+			response_header_timeout 30s
+		}
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

@@ -640,15 +640,15 @@ export const WORLD_MUTATIONS: readonly WorldMutation[] = [
   {
     id: 'schema.min-lines',
     file: SCHEMA,
-    find: 'z.minLength(1)',
-    replace: 'z.minLength(0)',
+    find: 'const MIN_LINES = 1;',
+    replace: 'const MIN_LINES = 0;',
     caseIds: ['world.request.schema'],
   },
   {
     id: 'schema.max-lines',
     file: SCHEMA,
-    find: 'z.maxLength(3)',
-    replace: 'z.maxLength(4)',
+    find: 'const MAX_LINES = 3;',
+    replace: 'const MAX_LINES = 4;',
     caseIds: ['world.request.schema'],
   },
 ];

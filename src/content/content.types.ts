@@ -104,7 +104,13 @@ export type ContactFormCopy = Readonly<{
     emailTooLong: string;
     messageTooLong: string;
   };
-  status: { invalid: string; sent: string; rateLimited: string; sendFailed: string };
+  status: {
+    invalid: string;
+    sent: string;
+    rateLimited: string;
+    verificationFailed: string;
+    sendFailed: string;
+  };
 }>;
 export type SiteCopy = Readonly<{
   title: string;

@@ -12,7 +12,7 @@ vi.mock('@/sections/contact/contact.schema', () => {
     get contactSchema() {
       throw new Error('schema-chunk');
     },
-    get fieldErrorsOf() {
+    get validateContactForm() {
       throw new Error('schema-chunk');
     },
   };
@@ -25,7 +25,9 @@ caseTest('contact-form.schema-load-failed', 'a failed schema chunk still submits
     return Promise.resolve({ status: 'idle' });
   });
 
-  const screen = await render(<ContactForm action={action} copy={CONTACT_FORM_COPY} />);
+  const screen = await render(
+    <ContactForm action={action} copy={CONTACT_FORM_COPY} turnstileSiteKey={null} />,
+  );
 
   await screen.getByRole('textbox', { name: 'Name', exact: true }).fill('Ada Lovelace');
   await screen.getByRole('textbox', { name: 'Email', exact: true }).fill('ada@example.test');

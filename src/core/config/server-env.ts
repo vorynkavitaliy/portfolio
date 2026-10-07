@@ -2,6 +2,8 @@ import 'server-only';
 
 import { z } from 'zod';
 
+import { resolveSiteUrl } from '@/core/config/site-url';
+
 const MAX_PORT = 65535;
 
 const serverEnvSchema = z.object({
@@ -38,4 +40,50 @@ export const getServerEnv = (): ServerEnv => {
   cachedEnv ??= parseServerEnv(process.env);
 
   return cachedEnv;
+};
+
+export const CLOUDFLARE_TEST_SECRETS: readonly string[] = [
+  '1x0000000000000000000000000000000AA',
+  '2x0000000000000000000000000000000AA',
+  '3x0000000000000000000000000000000AA',
+];
+
+const LOOPBACK_HOSTS: readonly string[] = ['localhost', '127.0.0.1', '[::1]'];
+
+const isPublicProduction = (source: EnvSource): boolean => {
+  return (
+    source['NODE_ENV'] === 'production' && !LOOPBACK_HOSTS.includes(resolveSiteUrl(source).hostname)
+  );
+};
+
+const turnstileSecretSchema = z.string().trim().min(1);
+
+const turnstileSiteKeySchema = z.string().trim().min(1);
+
+export const parseTurnstileSecret = (source: EnvSource): string => {
+  const result = turnstileSecretSchema.safeParse(source['TURNSTILE_SECRET_KEY']);
+
+  if (!result.success) {
+    throw new Error('Invalid server environment: TURNSTILE_SECRET_KEY');
+  }
+
+  if (isPublicProduction(source) && CLOUDFLARE_TEST_SECRETS.includes(result.data)) {
+    throw new Error('Invalid server environment: TURNSTILE_SECRET_KEY is a test key');
+  }
+
+  return result.data;
+};
+
+export const getTurnstileSecret = (): string => {
+  return parseTurnstileSecret(process.env);
+};
+
+export const parseTurnstileSiteKey = (source: EnvSource): string | null => {
+  const result = turnstileSiteKeySchema.safeParse(source['TURNSTILE_SITE_KEY']);
+
+  return result.success ? result.data : null;
+};
+
+export const getTurnstileSiteKey = (): string | null => {
+  return parseTurnstileSiteKey(process.env);
 };

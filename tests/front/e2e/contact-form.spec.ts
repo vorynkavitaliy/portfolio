@@ -2,9 +2,16 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test as base } from '@playwright/test';
 
 import { collectAnalytics, readAnalytics } from '@tests/front/e2e/support/analytics';
-import { CLIENT_IP_HEADER, CONTACT_FROM, CONTACT_TO } from '@tests/front/e2e/support/e2e-env';
+import { startServerWith } from '@tests/front/e2e/contact-form.server';
+import {
+  CLIENT_IP_HEADER,
+  CONTACT_FROM,
+  CONTACT_TO,
+  TURNSTILE_TEST_SECRET_FAIL,
+} from '@tests/front/e2e/support/e2e-env';
 import { searchMessages, waitForMessages } from '@tests/front/e2e/support/mail-sink';
 
+import type { ExtraServer } from '@tests/front/e2e/contact-form.server';
 import type { Locator, Page, TestInfo } from '@playwright/test';
 
 const FORM_URL = '/#text';
@@ -17,6 +24,11 @@ const STATUS_INVALID = 'Message not sent. Check the marked fields.';
 
 const STATUS_RATE_LIMITED =
   'Message not sent. Too many messages. Wait a few minutes and try again.';
+
+const STATUS_VERIFICATION_FAILED =
+  'Message not sent. The spam check did not pass. Write to the email address above.';
+
+const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
 
 const ERROR_NAME = 'Enter your name.';
 const ERROR_EMAIL = 'Enter a valid email, like name@company.com.';
@@ -110,7 +122,7 @@ const collectContactPosts = (page: Page): string[] => {
   const posts: string[] = [];
 
   page.on('request', (request) => {
-    if (request.method() === 'POST') {
+    if (request.method() === 'POST' && !request.url().startsWith(TURNSTILE_ORIGIN)) {
       posts.push(request.url());
     }
   });
@@ -145,7 +157,7 @@ test.describe('server HTML', () => {
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThan(0);
   });
 
-  test('sec.contact.no-js: a plain POST sends one mail and renders the sent state', async ({
+  test('sec.contact.no-js: a plain POST has no Turnstile token, shows the direct-email status and sends nothing', async ({
     page,
   }, info) => {
     onlyDesktop(info);
@@ -162,12 +174,121 @@ test.describe('server HTML', () => {
 
     await submitButton(page).click();
 
-    await expect(status(page)).toHaveText(STATUS_SENT);
+    await expect(status(page)).toHaveText(STATUS_VERIFICATION_FAILED);
+    await page.waitForTimeout(1000);
+    expect(await searchMessages(token)).toEqual([]);
+  });
+});
 
-    const messages = await waitForMessages(token, 1);
+test('sec.contact.turnstile-lazy: no Turnstile request before the first form interaction', async ({
+  page,
+}, info) => {
+  onlyDesktop(info);
 
-    expect(messages).toHaveLength(1);
-    expect(messages[0]?.subject).toBe(`${SUBJECT_PREFIX} No Script`);
+  const turnstileRequests: string[] = [];
+
+  page.on('request', (request) => {
+    if (request.url().startsWith(TURNSTILE_ORIGIN)) {
+      turnstileRequests.push(request.url());
+    }
+  });
+
+  await openForm(page);
+  await page.waitForTimeout(1500);
+  expect(turnstileRequests).toEqual([]);
+
+  await field(page, 'name').focus();
+
+  await expect
+    .poll(() => {
+      return turnstileRequests[0];
+    })
+    .toBe(`${TURNSTILE_ORIGIN}/turnstile/v0/api.js?render=explicit`);
+});
+
+test('sec.contact.csp-turnstile: the policy allows Turnstile scripts and frames only from its origin', async ({
+  request,
+}, info) => {
+  onlyDesktop(info);
+
+  const response = await request.get('/');
+  const policy: string[] = (response.headers()['content-security-policy'] ?? '').split('; ');
+
+  const scriptSrc: string[] = (
+    policy.find((directive: string) => {
+      return directive.startsWith('script-src ');
+    }) ?? ''
+  ).split(' ');
+
+  expect(scriptSrc).toContain(TURNSTILE_ORIGIN);
+  expect(scriptSrc).toContain("'strict-dynamic'");
+  expect(policy).toContain(`frame-src ${TURNSTILE_ORIGIN}`);
+  expect(policy).toContain("connect-src 'self'");
+});
+
+test('sec.contact.turnstile-missing: a blocked Turnstile script still submits, shows the direct-email status and sends nothing', async ({
+  page,
+}, info) => {
+  onlyDesktop(info);
+
+  const token: string = freshToken();
+
+  await page.route(`${TURNSTILE_ORIGIN}/**`, async (route) => {
+    await route.abort();
+  });
+
+  await openForm(page);
+  await waitMinimumFill(page);
+
+  await fillForm(page, {
+    name: 'Blocked Script',
+    email: 'blocked@visitor.test',
+    message: `Turnstile could not load ${token}`,
+  });
+
+  await submitButton(page).click();
+
+  await expect(status(page)).toHaveText(STATUS_VERIFICATION_FAILED);
+  await expect(field(page, 'name')).toHaveValue('Blocked Script');
+  await page.waitForTimeout(1000);
+  expect(await searchMessages(token)).toEqual([]);
+});
+
+test.describe('always-fail Turnstile secret', () => {
+  let failing: ExtraServer | null = null;
+
+  test.beforeAll(async ({}, info) => {
+    if (info.project.name === 'desktop-1440') {
+      failing = await startServerWith({ TURNSTILE_SECRET_KEY: TURNSTILE_TEST_SECRET_FAIL });
+    }
+  });
+
+  test.afterAll(async () => {
+    await failing?.stop();
+  });
+
+  test('sec.contact.turnstile-rejected: the always-fail test secret gives the direct-email status and no mail', async ({
+    page,
+  }, info) => {
+    onlyDesktop(info);
+
+    const token: string = freshToken();
+
+    await page.goto(`${failing?.baseURL ?? ''}${FORM_URL}`);
+    await expect(startedAtInput(page)).toHaveValue(/^\d+$/);
+    await waitMinimumFill(page);
+
+    await fillForm(page, {
+      name: 'Rejected Token',
+      email: 'rejected@visitor.test',
+      message: `Always-fail secret ${token}`,
+    });
+
+    await submitButton(page).click();
+
+    await expect(status(page)).toHaveText(STATUS_VERIFICATION_FAILED);
+    await page.waitForTimeout(1000);
+    expect(await searchMessages(token)).toEqual([]);
   });
 });
 

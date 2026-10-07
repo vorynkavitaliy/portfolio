@@ -1,4 +1,4 @@
-export type CspCaseSource = 'security-md' | 'next-docs';
+export type CspCaseSource = 'security-md' | 'next-docs' | 'cloudflare-docs';
 
 export type CspCase = Readonly<{
   id: string;
@@ -12,13 +12,16 @@ const DIRECTIVES =
 
 const NONCE = 'ADR-006 per-request nonce; plan 0002 §5.8 (base64 of crypto.randomUUID())';
 
+const TURNSTILE_CSP =
+  'cloudflare-docs https://developers.cloudflare.com/turnstile/reference/content-security-policy/ (script-src and frame-src https://challenges.cloudflare.com; works with strict-dynamic; pre-clearance only needs connect-src self)';
+
 export const CSP_CASES = [
   {
     id: 'sec.csp.exact.production',
     source: 'security-md',
     reference: DIRECTIVES,
     expected:
-      "outside development the policy for nonce n0nce equals the eleven directives in order, script-src 'self' 'nonce-n0nce' 'strict-dynamic', joined by '; '",
+      "outside development the policy for nonce n0nce equals the twelve directives in order, script-src 'self' 'nonce-n0nce' 'strict-dynamic' https://challenges.cloudflare.com, frame-src https://challenges.cloudflare.com, joined by '; '",
   },
   {
     id: 'sec.csp.exact.development',
@@ -53,6 +56,20 @@ export const CSP_CASES = [
     reference: NONCE,
     expected:
       'a nonce is canonical base64 whose decoded text is a version 4 UUID, so it is 128 bits from the platform CSPRNG',
+  },
+  {
+    id: 'sec.csp.turnstile.script',
+    source: 'cloudflare-docs',
+    reference: TURNSTILE_CSP,
+    expected:
+      "script-src lists https://challenges.cloudflare.com once, next to 'strict-dynamic', and no other remote origin",
+  },
+  {
+    id: 'sec.csp.turnstile.frame',
+    source: 'cloudflare-docs',
+    reference: TURNSTILE_CSP,
+    expected:
+      "frame-src is exactly https://challenges.cloudflare.com while connect-src stays 'self' and frame-ancestors stays 'none'",
   },
 ] as const satisfies readonly CspCase[];
 

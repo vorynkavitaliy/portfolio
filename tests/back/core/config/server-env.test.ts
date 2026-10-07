@@ -1,7 +1,12 @@
 import { expect, vi } from 'vitest';
 
 import { caseTest } from '@tests/back/core/config/server-env.case-test';
-import { parseServerEnv, type EnvSource } from '@/core/config/server-env';
+import {
+  parseServerEnv,
+  parseTurnstileSecret,
+  parseTurnstileSiteKey,
+  type EnvSource,
+} from '@/core/config/server-env';
 
 const VALID: EnvSource = {
   SMTP_HOST: 'smtp.example.test',
@@ -157,4 +162,83 @@ caseTest('sec.env.get-fails-loudly', 'names SMTP_PASS', async () => {
   expect(() => {
     getServerEnv();
   }).toThrow(invalid('SMTP_PASS'));
+});
+
+const TURNSTILE_TEST_SECRETS: readonly string[] = [
+  '1x0000000000000000000000000000000AA',
+  '2x0000000000000000000000000000000AA',
+  '3x0000000000000000000000000000000AA',
+];
+
+caseTest('sec.env.turnstile.secret-present', 'returns the trimmed secret', () => {
+  expect(parseTurnstileSecret({ TURNSTILE_SECRET_KEY: '  0x4AAA-secret-zq81  ' })).toBe(
+    '0x4AAA-secret-zq81',
+  );
+});
+
+caseTest('sec.env.turnstile.secret-missing', 'names the variable, never the value', async () => {
+  const named = invalid('TURNSTILE_SECRET_KEY');
+
+  expect(() => {
+    parseTurnstileSecret({});
+  }).toThrow(named);
+
+  expect(() => {
+    parseTurnstileSecret({ TURNSTILE_SECRET_KEY: '   ' });
+  }).toThrow(named);
+
+  vi.stubEnv('TURNSTILE_SECRET_KEY', '');
+
+  const { getTurnstileSecret } = await import('@/core/config/server-env');
+
+  expect(() => {
+    getTurnstileSecret();
+  }).toThrow(named);
+
+  vi.stubEnv('TURNSTILE_SECRET_KEY', '0x4AAA-from-env');
+  expect(getTurnstileSecret()).toBe('0x4AAA-from-env');
+});
+
+caseTest('sec.env.turnstile.test-secret-production', 'test secrets never reach production', () => {
+  const PUBLIC = { NODE_ENV: 'production', SITE_URL: 'https://portfolio.example.test' };
+
+  for (const secret of TURNSTILE_TEST_SECRETS) {
+    expect(() => {
+      parseTurnstileSecret({ TURNSTILE_SECRET_KEY: secret, ...PUBLIC });
+    }).toThrow(/^Invalid server environment: TURNSTILE_SECRET_KEY/);
+
+    for (const local of ['http://localhost:4321', 'http://127.0.0.1:3000', 'http://[::1]:3000']) {
+      expect(
+        parseTurnstileSecret({
+          TURNSTILE_SECRET_KEY: secret,
+          NODE_ENV: 'production',
+          SITE_URL: local,
+        }),
+      ).toBe(secret);
+    }
+
+    expect(
+      parseTurnstileSecret({
+        TURNSTILE_SECRET_KEY: secret,
+        NODE_ENV: 'development',
+        SITE_URL: PUBLIC.SITE_URL,
+      }),
+    ).toBe(secret);
+  }
+
+  expect(parseTurnstileSecret({ TURNSTILE_SECRET_KEY: '0x4AAA-real', ...PUBLIC })).toBe(
+    '0x4AAA-real',
+  );
+});
+
+caseTest('sec.env.turnstile.site-key', 'trimmed value or null', async () => {
+  expect(parseTurnstileSiteKey({ TURNSTILE_SITE_KEY: ' 0x4AAAA-site ' })).toBe('0x4AAAA-site');
+  expect(parseTurnstileSiteKey({})).toBeNull();
+  expect(parseTurnstileSiteKey({ TURNSTILE_SITE_KEY: '  ' })).toBeNull();
+
+  vi.stubEnv('TURNSTILE_SITE_KEY', '1x00000000000000000000BB');
+
+  const { getTurnstileSiteKey } = await import('@/core/config/server-env');
+
+  expect(getTurnstileSiteKey()).toBe('1x00000000000000000000BB');
 });

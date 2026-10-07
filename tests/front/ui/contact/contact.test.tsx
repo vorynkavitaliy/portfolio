@@ -48,7 +48,9 @@ const answering = (state: ContactFormState) => {
 };
 
 const mountForm = async (action: FakeAction) => {
-  const screen = await render(<ContactForm action={action} copy={CONTACT_FORM_COPY} />);
+  const screen = await render(
+    <ContactForm action={action} copy={CONTACT_FORM_COPY} turnstileSiteKey={null} />,
+  );
 
   return {
     screen,
@@ -308,6 +310,21 @@ caseTest('contact-form.send-failed', 'send-failed status', async () => {
   await expect
     .element(form.status)
     .toHaveTextContent('Message not sent. Try again, or write to the email address above.');
+});
+
+caseTest('contact-form.verification-failed', 'verification-failed status', async () => {
+  const form = await mountForm(
+    answering({ status: 'error', code: 'VERIFICATION_FAILED', fieldErrors: null }),
+  );
+
+  await fillValid(form);
+  await form.submit.click();
+
+  await expect
+    .element(form.status)
+    .toHaveTextContent(
+      'Message not sent. The spam check did not pass. Write to the email address above.',
+    );
 });
 
 caseTest('contact-form.server-field-errors', 'server errors shown and focused', async () => {

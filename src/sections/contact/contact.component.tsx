@@ -1,5 +1,6 @@
 import { CONTACT_FORM_COPY } from '@/content/contact-form.content';
 import { STATIONS_COPY } from '@/content/stations.content';
+import { getTurnstileSiteKey } from '@/core/config/server-env';
 import { sendMessageAction } from '@/sections/contact/actions/send-message.action';
 import { ContactForm } from '@/sections/contact/contact-form.client';
 import { CopyEmail } from '@/sections/contact/copy-email.client';
@@ -34,7 +35,11 @@ export const Contact = () => {
         </li>
       </ul>
 
-      <ContactForm action={sendMessageAction} copy={CONTACT_FORM_COPY} />
+      <ContactForm
+        action={sendMessageAction}
+        copy={CONTACT_FORM_COPY}
+        turnstileSiteKey={getTurnstileSiteKey()}
+      />
     </>
   );
 };

@@ -1,5 +1,12 @@
+const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
+
 const scriptSources = (nonce: string, development: boolean): string => {
-  const sources: readonly string[] = ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"];
+  const sources: readonly string[] = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    "'strict-dynamic'",
+    TURNSTILE_ORIGIN,
+  ];
 
   return (development ? [...sources, "'unsafe-eval'"] : sources).join(' ');
 };
@@ -12,6 +19,7 @@ export const buildContentSecurityPolicy = (nonce: string, development: boolean):
     "img-src 'self' data: blob:",
     "font-src 'self'",
     "connect-src 'self'",
+    `frame-src ${TURNSTILE_ORIGIN}`,
     "worker-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",

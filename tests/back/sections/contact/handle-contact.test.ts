@@ -8,9 +8,16 @@ import { CONTACT_IP_POLICY } from '@/server/rate-limit/rate-limit.constants';
 import type { ContactDeps } from '@/sections/contact/actions/handle-contact';
 import type { ContactFormState } from '@/sections/contact/contact.types';
 import type { ContactMessage, MailResult, OutgoingMail } from '@/server/mail/mail.types';
+import type {
+  TurnstileFailure,
+  TurnstileRequest,
+  TurnstileResult,
+} from '@/server/turnstile/turnstile.types';
 
 const NOW = 1_760_000_000_000;
 const IP = '203.0.113.7';
+const CAPTCHA_TOKEN = 'XXXX.DUMMY.TOKEN.XXXX';
+const SECRET = '0x4AAAAAAA-wiring-secret';
 
 const VALID_FIELDS: Readonly<Record<string, string>> = {
   name: '  Ann Lee ',
@@ -18,11 +25,13 @@ const VALID_FIELDS: Readonly<Record<string, string>> = {
   message: '  Hello, let us talk about a role.  ',
   website: '',
   startedAt: String(NOW - 60_000),
+  'cf-turnstile-response': CAPTCHA_TOKEN,
 };
 
 type Harness = {
   deps: ContactDeps;
   outbox: ContactMessage[];
+  checks: TurnstileRequest[];
   takeToken: ReturnType<typeof vi.fn<(ip: string) => boolean>>;
 };
 
@@ -36,17 +45,28 @@ const formOf = (overrides: Readonly<Record<string, string>> = {}): FormData => {
   return formData;
 };
 
-const harness = (allow: (ip: string) => boolean, result: MailResult = { ok: true }): Harness => {
+const harness = (
+  allow: (ip: string) => boolean,
+  result: MailResult = { ok: true },
+  verdict: TurnstileResult = { ok: true },
+): Harness => {
   const outbox: ContactMessage[] = [];
+  const checks: TurnstileRequest[] = [];
   const takeToken = vi.fn(allow);
 
   return {
     outbox,
+    checks,
     takeToken,
     deps: {
       ip: IP,
       now: NOW,
       takeToken,
+      verify: async (request: TurnstileRequest) => {
+        checks.push(request);
+
+        return verdict;
+      },
       send: async (message: ContactMessage) => {
         outbox.push(message);
 
@@ -61,7 +81,7 @@ const always = (): boolean => {
 };
 
 caseTest('sec.contact.limiter-first', 'nothing runs after an empty bucket', async () => {
-  const { deps, outbox } = harness(() => {
+  const { deps, outbox, checks } = harness(() => {
     return false;
   });
 
@@ -75,6 +95,7 @@ caseTest('sec.contact.limiter-first', 'nothing runs after an empty bucket', asyn
   });
 
   expect(read).not.toHaveBeenCalled();
+  expect(checks).toEqual([]);
   expect(outbox).toEqual([]);
 });
 
@@ -163,7 +184,7 @@ caseTest('sec.contact.valid', 'exactly one message', async () => {
   ]);
 });
 
-caseTest('sec.contact.no-js', 'no startedAt still sends', async () => {
+caseTest('sec.contact.no-js', 'no startedAt with a token still sends', async () => {
   const { deps, outbox } = harness(always);
 
   expect(await handleContact(formOf({ startedAt: '' }), deps)).toEqual({ status: 'sent' });
@@ -188,6 +209,25 @@ caseTest(
   async () => {
     const sent: OutgoingMail[] = [];
     let clientIp = '198.51.100.20';
+
+    const verifyBodies: Record<string, string>[] = [];
+    let captchaPasses = true;
+
+    vi.stubEnv('TURNSTILE_SECRET_KEY', SECRET);
+    vi.stubEnv('SITE_URL', 'https://portfolio.example.test');
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
+      const body: unknown = init.body;
+
+      verifyBodies.push(body instanceof URLSearchParams ? Object.fromEntries(body.entries()) : {});
+
+      return Response.json({
+        success: captchaPasses,
+        hostname: 'portfolio.example.test',
+        action: 'contact',
+      });
+    });
 
     vi.doMock('next/headers', () => {
       return {
@@ -226,6 +266,13 @@ caseTest(
     expect(statuses).toEqual(['sent', 'sent', 'sent', 'RATE_LIMITED']);
     expect(sent).toHaveLength(3);
     expect(sent[0]?.replyTo).toBe('ann@example.test');
+    expect(verifyBodies).toHaveLength(3);
+
+    for (const body of verifyBodies) {
+      expect(body['secret']).toBe(SECRET);
+      expect(body['response']).toBe(CAPTCHA_TOKEN);
+      expect(body['remoteip']).toBe('198.51.100.20');
+    }
 
     clientIp = '198.51.100.21';
 
@@ -235,7 +282,94 @@ caseTest(
 
     expect(sent).toHaveLength(4);
 
+    clientIp = '198.51.100.22';
+    captchaPasses = false;
+
+    expect(await sendMessageAction({ status: 'idle' }, formOf())).toEqual({
+      status: 'error',
+      code: 'VERIFICATION_FAILED',
+      fieldErrors: null,
+    });
+
+    expect(sent).toHaveLength(4);
+
+    vi.unstubAllGlobals();
     vi.doUnmock('next/headers');
     vi.doUnmock('nodemailer');
   },
 );
+
+const FAILURES: readonly TurnstileFailure[] = [
+  'missing-token',
+  'unavailable',
+  'bad-response',
+  'rejected',
+  'hostname-mismatch',
+  'action-mismatch',
+];
+
+const VERIFICATION_FAILED: ContactFormState = {
+  status: 'error',
+  code: 'VERIFICATION_FAILED',
+  fieldErrors: null,
+};
+
+caseTest('sec.contact.turnstile-request', 'token, IP and action reach the check', async () => {
+  const { deps, checks } = harness(always);
+
+  await handleContact(formOf(), deps);
+
+  const bare: FormData = formOf();
+
+  bare.delete('cf-turnstile-response');
+  await handleContact(bare, deps);
+
+  expect(checks).toEqual([
+    { token: CAPTCHA_TOKEN, ip: IP, action: 'contact' },
+    { token: '', ip: IP, action: 'contact' },
+  ]);
+});
+
+caseTest('sec.contact.turnstile-failed', 'every failure is VERIFICATION_FAILED', async () => {
+  for (const code of FAILURES) {
+    const { deps, outbox } = harness(always, { ok: true }, { ok: false, code });
+
+    expect(await handleContact(formOf(), deps)).toEqual(VERIFICATION_FAILED);
+    expect(outbox).toEqual([]);
+  }
+});
+
+caseTest('sec.contact.turnstile-after-bot', 'bots never reach Turnstile', async () => {
+  const { deps, checks, outbox } = harness(always);
+
+  expect(await handleContact(formOf({ website: 'https://spam.test' }), deps)).toEqual({
+    status: 'sent',
+  });
+
+  expect(await handleContact(formOf({ startedAt: String(NOW - 1000) }), deps)).toEqual({
+    status: 'sent',
+  });
+
+  expect(checks).toEqual([]);
+  expect(outbox).toEqual([]);
+});
+
+caseTest('sec.contact.turnstile-before-zod', 'no field errors before the check', async () => {
+  const { deps, outbox } = harness(always, { ok: true }, { ok: false, code: 'rejected' });
+
+  expect(await handleContact(formOf({ name: '', email: 'nope' }), deps)).toEqual(
+    VERIFICATION_FAILED,
+  );
+
+  expect(outbox).toEqual([]);
+});
+
+caseTest('sec.contact.no-js-no-token', 'a plain POST without a token sends nothing', async () => {
+  const { deps, outbox } = harness(always, { ok: true }, { ok: false, code: 'missing-token' });
+  const bare: FormData = formOf({ startedAt: '' });
+
+  bare.delete('cf-turnstile-response');
+
+  expect(await handleContact(bare, deps)).toEqual(VERIFICATION_FAILED);
+  expect(outbox).toEqual([]);
+});

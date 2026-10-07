@@ -240,6 +240,39 @@ caseTest('routes.autopilot.all-pairs', 'autopilot docks at every station from ev
   expect(worst.size).toBe(STATION_COUNT * (STATION_COUNT - 1));
 });
 
+caseTest(
+  'routes.autopilot.from-hover',
+  'autopilot from a settled dock reaches only its target',
+  () => {
+    const map = realMap();
+
+    for (const theta of FOUR_HEADINGS) {
+      for (let from = 0; from < STATION_COUNT; from += 1) {
+        for (let to = 0; to < STATION_COUNT; to += 1) {
+          if (from === to) {
+            continue;
+          }
+
+          const sim =
+            from === HOME
+              ? homeAfterIntro(map, theta)
+              : hoverFiveSeconds(map, startDocked(map, from, theta));
+
+          const result = flyAutopilot(map, sim, to, DOCK_BOUND_SECONDS);
+
+          expect({ theta, from, to, docked: result.docked, all: dockedStations(sim) }).toEqual({
+            theta,
+            from,
+            to,
+            docked: to,
+            all: [to],
+          });
+        }
+      }
+    }
+  },
+);
+
 caseTest('routes.autopilot.safe', 'autopilot routes keep the floor and the ceiling', () => {
   const map = realMap();
 

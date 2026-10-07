@@ -4,7 +4,12 @@ import { expect, test } from 'vitest';
 
 import { HANDLE_CONTACT_CASES } from '@tests/back/sections/contact/handle-contact.cases';
 
-const ALLOWED_SOURCES: readonly string[] = ['security-md', 'spec', 'owner-2026-10-07'];
+const ALLOWED_SOURCES: readonly string[] = [
+  'security-md',
+  'spec',
+  'owner-2026-10-07',
+  'cloudflare-docs',
+];
 
 const TEST_FILE = 'tests/back/sections/contact/handle-contact.test.ts';
 

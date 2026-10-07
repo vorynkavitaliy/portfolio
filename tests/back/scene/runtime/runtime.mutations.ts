@@ -16,6 +16,7 @@ const EFFECTS = 'src/scene/runtime/effects.ts';
 const RIG = 'src/scene/runtime/camera-rig.ts';
 const CONTROLLER = 'src/scene/runtime/world-controller.ts';
 const LOOP = 'src/scene/runtime/frame-loop.ts';
+const WORLD_RUNTIME = 'src/scene/runtime/world-runtime.ts';
 const LOADER = 'src/scene/runtime/world-message.ts';
 const PIXEL = 'src/scene/visuals/pixel-texture.ts';
 const TERRAIN = 'src/scene/visuals/terrain.ts';
@@ -489,5 +490,19 @@ export const RUNTIME_MUTATIONS: readonly RuntimeMutation[] = [
     find: '      cancel(pending);\n',
     replace: '',
     caseIds: ['loop.stops'],
+  },
+  {
+    id: 'build.no-yield-after-terrain',
+    file: WORLD_RUNTIME,
+    find: '  await yieldTurn();\n  modules.push(...createEnvironment(build));',
+    replace: '  modules.push(...createEnvironment(build));',
+    caseIds: ['build.yields-between-modules'],
+  },
+  {
+    id: 'build.no-yield-after-environment',
+    file: WORLD_RUNTIME,
+    find: '  await yieldTurn();\n\n  const actors',
+    replace: '  const actors',
+    caseIds: ['build.yields-between-modules'],
   },
 ];

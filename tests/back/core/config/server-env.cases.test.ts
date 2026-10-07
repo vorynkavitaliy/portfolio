@@ -4,7 +4,12 @@ import { expect, test } from 'vitest';
 
 import { SERVER_ENV_CASES } from '@tests/back/core/config/server-env.cases';
 
-const ALLOWED_SOURCES: readonly string[] = ['security-md', 'rfc-6335', 'owner-2026-10-07'];
+const ALLOWED_SOURCES: readonly string[] = [
+  'security-md',
+  'rfc-6335',
+  'owner-2026-10-07',
+  'cloudflare-docs',
+];
 
 const TEST_FILE = 'tests/back/core/config/server-env.test.ts';
 

@@ -20,6 +20,8 @@
     "test:e2e": "playwright test",
     "test:mutate": "node --import tsx scripts/mutate.mts",
     "regress": "node --import tsx scripts/regress.mts",
+    "budget": "node --import tsx scripts/budget.mts",
+    "perf:world": "node --import tsx scripts/perf-world.mts",
     "mail:up": "docker compose -f docker-compose.dev.yml up -d mailpit",
     "mail:down": "docker compose -f docker-compose.dev.yml down",
     "prepare": "node -e \"const{existsSync}=require('fs');if(!process.env.CI&&existsSync('.git')){require('child_process').spawnSync('git',['config','core.hooksPath','.githooks'],{stdio:'ignore'})}\""

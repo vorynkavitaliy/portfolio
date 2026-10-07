@@ -16,6 +16,8 @@ export const CONTACT_FORM_COPY: ContactFormCopy = {
     invalid: 'Message not sent. Check the marked fields.',
     sent: 'Message sent. A reply comes by email.',
     rateLimited: 'Message not sent. Too many messages. Wait a few minutes and try again.',
+    verificationFailed:
+      'Message not sent. The spam check did not pass. Write to the email address above.',
     sendFailed: 'Message not sent. Try again, or write to the email address above.',
   },
 };

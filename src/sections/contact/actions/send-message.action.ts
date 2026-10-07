@@ -9,6 +9,7 @@ import { handleContact } from '@/sections/contact/actions/handle-contact';
 import { sendContactMail } from '@/server/mail/mail';
 import { takeContactToken } from '@/server/rate-limit/rate-limit';
 import { clientIp } from '@/server/request/client-ip';
+import { verifyTurnstile } from '@/server/turnstile/turnstile';
 
 import type { ContactFormState } from '@/sections/contact/contact.types';
 
@@ -22,6 +23,7 @@ export const sendMessageAction = async (
     ip,
     now: Date.now(),
     takeToken: takeContactToken,
+    verify: verifyTurnstile,
     send: sendContactMail,
   });
 };

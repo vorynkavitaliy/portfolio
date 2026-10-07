@@ -1,4 +1,5 @@
-export type ContactErrorCode = 'RATE_LIMITED' | 'INVALID_INPUT' | 'SEND_FAILED';
+export type ContactErrorCode =
+  'RATE_LIMITED' | 'VERIFICATION_FAILED' | 'INVALID_INPUT' | 'SEND_FAILED';
 
 export type ContactField = 'name' | 'email' | 'message';
 
@@ -8,3 +9,7 @@ export type ContactFormState =
   | { status: 'idle' }
   | { status: 'sent' }
   | { status: 'error'; code: ContactErrorCode; fieldErrors: ContactFieldErrors | null };
+
+export const TURNSTILE_FIELD = 'cf-turnstile-response';
+
+export const TURNSTILE_ACTION = 'contact';

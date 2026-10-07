@@ -5,11 +5,12 @@ import { buildContentSecurityPolicy, createNonce } from '@/core/config/csp';
 
 const PRODUCTION_POLICY =
   "default-src 'self'; " +
-  "script-src 'self' 'nonce-n0nce' 'strict-dynamic'; " +
+  "script-src 'self' 'nonce-n0nce' 'strict-dynamic' https://challenges.cloudflare.com; " +
   "style-src 'self' 'unsafe-inline'; " +
   "img-src 'self' data: blob:; " +
   "font-src 'self'; " +
   "connect-src 'self'; " +
+  'frame-src https://challenges.cloudflare.com; ' +
   "worker-src 'self'; " +
   "object-src 'none'; " +
   "base-uri 'self'; " +
@@ -18,12 +19,16 @@ const PRODUCTION_POLICY =
 
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
-const scriptSrc = (policy: string): string => {
+const directiveOf = (policy: string, name: string): string => {
   return (
     policy.split('; ').find((directive: string) => {
-      return directive.startsWith('script-src ');
+      return directive.startsWith(`${name} `);
     }) ?? ''
   );
+};
+
+const scriptSrc = (policy: string): string => {
+  return directiveOf(policy, 'script-src');
 };
 
 caseTest('sec.csp.exact.production', 'equals the documented policy', () => {
@@ -32,7 +37,10 @@ caseTest('sec.csp.exact.production', 'equals the documented policy', () => {
 
 caseTest('sec.csp.exact.development', 'adds only unsafe-eval to script-src', () => {
   expect(buildContentSecurityPolicy('n0nce', true)).toBe(
-    PRODUCTION_POLICY.replace("'strict-dynamic';", "'strict-dynamic' 'unsafe-eval';"),
+    PRODUCTION_POLICY.replace(
+      'https://challenges.cloudflare.com; style-src',
+      "https://challenges.cloudflare.com 'unsafe-eval'; style-src",
+    ),
   );
 });
 
@@ -66,4 +74,29 @@ caseTest('sec.csp.nonce.uuid-base64', 'decodes to a v4 UUID', () => {
 
   expect(Buffer.from(decoded, 'utf8').toString('base64')).toBe(nonce);
   expect(decoded).toMatch(UUID_V4);
+});
+
+caseTest(
+  'sec.csp.turnstile.script',
+  'the Turnstile origin is the only remote script origin',
+  () => {
+    const sources: readonly string[] = scriptSrc(buildContentSecurityPolicy('n0nce', false))
+      .split(' ')
+      .slice(1);
+
+    const remote: readonly string[] = sources.filter((source: string) => {
+      return source.startsWith('https:') || source.startsWith('http:');
+    });
+
+    expect(remote).toEqual(['https://challenges.cloudflare.com']);
+    expect(sources).toContain("'strict-dynamic'");
+  },
+);
+
+caseTest('sec.csp.turnstile.frame', 'frames only from Turnstile, nothing else widened', () => {
+  const policy: string = buildContentSecurityPolicy('n0nce', false);
+
+  expect(directiveOf(policy, 'frame-src')).toBe('frame-src https://challenges.cloudflare.com');
+  expect(directiveOf(policy, 'connect-src')).toBe("connect-src 'self'");
+  expect(directiveOf(policy, 'frame-ancestors')).toBe("frame-ancestors 'none'");
 });

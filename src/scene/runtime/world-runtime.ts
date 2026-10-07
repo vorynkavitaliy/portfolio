@@ -33,6 +33,7 @@ import {
   nextTier,
   profileFor,
 } from '@/scene/runtime/quality';
+import { exposeWorldDebug } from '@/scene/runtime/debug';
 import { createRenderer } from '@/scene/runtime/renderer';
 import {
   BLOOM_BASE,
@@ -45,7 +46,7 @@ import {
 } from '@/scene/runtime/runtime.constants';
 import { createWorldController } from '@/scene/runtime/world-controller';
 import { WorldStartError } from '@/scene/runtime/world-start-error';
-import { createActors } from '@/scene/visuals/actors/actors';
+import { createActors, type Actors } from '@/scene/visuals/actors/actors';
 import { createEnvironment } from '@/scene/visuals/environment/environment';
 import { createPixelTexture } from '@/scene/visuals/pixel-texture';
 import { createTerrainModule } from '@/scene/visuals/terrain';
@@ -57,6 +58,7 @@ import type { Vec3 } from '@/scene/flight/flight.types';
 import type {
   BloomPass,
   FrameContext,
+  SceneBuildInput,
   SceneModule,
   StickElements,
   Tier,
@@ -130,6 +132,50 @@ const runAll = (disposers: (() => void)[]): void => {
   }
 };
 
+type YieldTurn = () => Promise<void>;
+
+type YieldingScheduler = Readonly<{ yield: () => Promise<void> }>;
+
+const isYieldingScheduler = (value: unknown): value is YieldingScheduler => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'yield' in value &&
+    typeof value.yield === 'function'
+  );
+};
+
+export const yieldToMain: YieldTurn = () => {
+  const scheduler: unknown = Reflect.get(globalThis, 'scheduler');
+
+  if (isYieldingScheduler(scheduler)) {
+    return scheduler.yield();
+  }
+
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, 0);
+  });
+};
+
+export type SceneParts = Readonly<{ modules: SceneModule[]; actors: Actors }>;
+
+export const buildSceneModules = async (
+  build: SceneBuildInput,
+  yieldTurn: YieldTurn,
+): Promise<SceneParts> => {
+  const modules: SceneModule[] = [createTerrainModule(build.data.chunks, build.pixelTexture)];
+
+  await yieldTurn();
+  modules.push(...createEnvironment(build));
+  await yieldTurn();
+
+  const actors = createActors(build);
+
+  modules.push(...actors.modules);
+
+  return { modules, actors };
+};
+
 export const startWorld = async (options: StartWorldOptions): Promise<WorldRuntime> => {
   const { canvas, data, store } = options;
   const profile = profileFor(window.innerWidth);
@@ -138,7 +184,11 @@ export const startWorld = async (options: StartWorldOptions): Promise<WorldRunti
   let contextLost = false;
   let disposed = false;
 
+  await yieldToMain();
+
   const renderer: WebGLRenderer = createRenderer(canvas, profile);
+
+  disposers.push(exposeWorldDebug(renderer));
 
   disposers.push(() => {
     renderer.forceContextLoss();
@@ -202,14 +252,9 @@ export const startWorld = async (options: StartWorldOptions): Promise<WorldRunti
 
     const build = { data, profile, renderer, scene, camera, pixelTexture };
 
-    const modules: SceneModule[] = [
-      createTerrainModule(data.chunks, pixelTexture),
-      ...createEnvironment(build),
-    ];
+    await yieldToMain();
 
-    const actors = createActors(build);
-
-    modules.push(...actors.modules);
+    const { modules, actors } = await buildSceneModules(build, yieldToMain);
 
     disposers.push(() => {
       for (const sceneModule of modules) {

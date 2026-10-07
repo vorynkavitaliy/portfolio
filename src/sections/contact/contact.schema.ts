@@ -87,3 +87,11 @@ export const fieldErrorsOf = (error: z.core.$ZodError): ContactFieldErrors => {
 
   return result;
 };
+
+export const validateContactForm = (
+  raw: Readonly<Record<'name' | 'email' | 'message' | 'website', string>>,
+): ContactFieldErrors | null => {
+  const result = z.safeParse(contactSchema, raw);
+
+  return result.success ? null : fieldErrorsOf(result.error);
+};

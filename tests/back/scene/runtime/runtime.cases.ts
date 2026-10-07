@@ -439,6 +439,13 @@ export const RUNTIME_CASES = [
     expected: 'WorldStartError keeps its reason; any other error → renderer-failed',
   },
   {
+    id: 'build.yields-between-modules',
+    source: 'scene-rule',
+    reference: 'scene-3d.md §4 (no long task during load); perf.md S27 long-task breach',
+    expected:
+      'terrain, environment and actors are built in separate turns with a yield between each, order kept',
+  },
+  {
     id: 'renderer.attributes',
     source: 'spec',
     reference: 'spec FR-040 (narrow without antialiasing); plan S15 renderer',

@@ -1,8 +1,10 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   reactCompiler: true,
   poweredByHeader: false,
+  env: { NEXT_PUBLIC_WORLD_DEBUG: process.env.NEXT_PUBLIC_WORLD_DEBUG ?? '0' },
   experimental: {
     serverActions: { bodySizeLimit: '16kb' },
   },

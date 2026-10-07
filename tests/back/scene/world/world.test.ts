@@ -26,7 +26,7 @@ import { meshOccupancy } from '@/scene/world/mesher';
 import { cellIndex, createMaterialTable, createOccupancy, setCell } from '@/scene/world/occupancy';
 import { PALETTE } from '@/scene/world/palette';
 import { createRng } from '@/scene/world/rng';
-import { worldRequestSchema } from '@/scene/world/world.schema';
+import { parseWorldRequest } from '@/scene/world/world.schema';
 
 import type { MaterialEntry } from '@/scene/world/occupancy';
 import type { Rgb } from '@/scene/world/palette';
@@ -1183,7 +1183,7 @@ caseTest('world.letters.unknown-glyph', 'character without a glyph is rejected',
     return generateWorld({ skyName: ['VITALIX'] }, () => {});
   }).toThrow();
 
-  expect(worldRequestSchema.safeParse({ skyName: ['VITALIX'] }).success).toBe(false);
+  expect(parseWorldRequest({ skyName: ['VITALIX'] }) !== null).toBe(false);
 });
 
 caseTest('world.minimap.bands', 'every pixel has its band colour and shade', () => {
@@ -1371,13 +1371,13 @@ caseTest('world.gen.shape', 'array types and lengths follow WorldData', () => {
 });
 
 caseTest('world.request.schema', 'name lines accepted, malformed rejected', () => {
-  expect(worldRequestSchema.safeParse({ skyName: ['VITALII', 'VORYNKA'] }).success).toBe(true);
-  expect(worldRequestSchema.safeParse({ skyName: ['VITALII'] }).success).toBe(true);
-  expect(worldRequestSchema.safeParse({ skyName: [] }).success).toBe(false);
-  expect(worldRequestSchema.safeParse({ skyName: ['vitalii'] }).success).toBe(false);
-  expect(worldRequestSchema.safeParse({ skyName: ['', 'A'] }).success).toBe(false);
-  expect(worldRequestSchema.safeParse({ skyName: ['A', 'A', 'A', 'A'] }).success).toBe(false);
-  expect(worldRequestSchema.safeParse({ skyName: 'VITALII' }).success).toBe(false);
-  expect(worldRequestSchema.safeParse({}).success).toBe(false);
-  expect(worldRequestSchema.safeParse(null).success).toBe(false);
+  expect(parseWorldRequest({ skyName: ['VITALII', 'VORYNKA'] }) !== null).toBe(true);
+  expect(parseWorldRequest({ skyName: ['VITALII'] }) !== null).toBe(true);
+  expect(parseWorldRequest({ skyName: [] }) !== null).toBe(false);
+  expect(parseWorldRequest({ skyName: ['vitalii'] }) !== null).toBe(false);
+  expect(parseWorldRequest({ skyName: ['', 'A'] }) !== null).toBe(false);
+  expect(parseWorldRequest({ skyName: ['A', 'A', 'A', 'A'] }) !== null).toBe(false);
+  expect(parseWorldRequest({ skyName: 'VITALII' }) !== null).toBe(false);
+  expect(parseWorldRequest({}) !== null).toBe(false);
+  expect(parseWorldRequest(null) !== null).toBe(false);
 });

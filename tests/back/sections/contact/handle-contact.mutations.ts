@@ -22,6 +22,12 @@ const BOT_BLOCK =
 
 const PARSE_LINE = '  const parsed = contactSchema.safeParse(raw);\n\n';
 
+const VERIFY_BLOCK =
+  "  const verdict: TurnstileResult = await deps.verify({\n    token: turnstileToken(formData),\n    ip: deps.ip,\n    action: TURNSTILE_ACTION,\n  });\n\n  if (!verdict.ok) {\n    return { status: 'error', code: 'VERIFICATION_FAILED', fieldErrors: null };\n  }\n\n";
+
+const ZOD_BLOCK =
+  "  if (!parsed.success) {\n    return { status: 'error', code: 'INVALID_INPUT', fieldErrors: fieldErrorsOf(parsed.error) };\n  }\n\n";
+
 export const HANDLE_CONTACT_MUTATIONS: readonly HandleContactMutation[] = [
   {
     id: 'limiter.removed',
@@ -40,11 +46,8 @@ export const HANDLE_CONTACT_MUTATIONS: readonly HandleContactMutation[] = [
   {
     id: 'order.zod-before-anti-bot',
     file: HANDLE,
-    find: `${BOT_BLOCK}${PARSE_LINE}`,
-    replace: `${PARSE_LINE}${BOT_BLOCK}`.replace(
-      '  if (isBotSubmission',
-      "  if (!parsed.success) {\n    return { status: 'error', code: 'INVALID_INPUT', fieldErrors: fieldErrorsOf(parsed.error) };\n  }\n\n  if (isBotSubmission",
-    ),
+    find: `${BOT_BLOCK}${VERIFY_BLOCK}${PARSE_LINE}${ZOD_BLOCK}`,
+    replace: `${PARSE_LINE}${ZOD_BLOCK}${BOT_BLOCK}${VERIFY_BLOCK}`,
     caseIds: ['sec.contact.bot-before-zod'],
   },
   {
@@ -140,6 +143,105 @@ export const HANDLE_CONTACT_MUTATIONS: readonly HandleContactMutation[] = [
     file: ACTION,
     find: 'now: Date.now(),',
     replace: 'now: 0,',
+    caseIds: ['sec.contact.action-wiring'],
+  },
+  {
+    id: 'turnstile.removed',
+    file: HANDLE,
+    find: VERIFY_BLOCK,
+    replace: '',
+    caseIds: [
+      'sec.contact.turnstile-request',
+      'sec.contact.turnstile-failed',
+      'sec.contact.turnstile-before-zod',
+      'sec.contact.no-js-no-token',
+      'sec.contact.action-wiring',
+    ],
+  },
+  {
+    id: 'turnstile.result-ignored',
+    file: HANDLE,
+    find: '  if (!verdict.ok) {',
+    replace: '  if (verdict.ok === undefined) {',
+    caseIds: [
+      'sec.contact.turnstile-failed',
+      'sec.contact.turnstile-before-zod',
+      'sec.contact.no-js-no-token',
+      'sec.contact.action-wiring',
+    ],
+  },
+  {
+    id: 'turnstile.before-anti-bot',
+    file: HANDLE,
+    find: `${BOT_BLOCK}${VERIFY_BLOCK}`,
+    replace: `${VERIFY_BLOCK}${BOT_BLOCK}`,
+    caseIds: ['sec.contact.turnstile-after-bot'],
+  },
+  {
+    id: 'turnstile.before-limiter',
+    file: HANDLE,
+    find: `${LIMITER_BLOCK}${READ_LINE}${BOT_BLOCK}${VERIFY_BLOCK}`,
+    replace: `${READ_LINE}${VERIFY_BLOCK}${LIMITER_BLOCK}${BOT_BLOCK}`,
+    caseIds: ['sec.contact.limiter-first'],
+  },
+  {
+    id: 'turnstile.after-zod',
+    file: HANDLE,
+    find: `${VERIFY_BLOCK}${PARSE_LINE}${ZOD_BLOCK}`,
+    replace: `${PARSE_LINE}${ZOD_BLOCK}${VERIFY_BLOCK}`,
+    caseIds: ['sec.contact.turnstile-before-zod'],
+  },
+  {
+    id: 'turnstile.wrong-field',
+    file: HANDLE,
+    find: 'formData.get(TURNSTILE_FIELD)',
+    replace: "formData.get('turnstile')",
+    caseIds: ['sec.contact.turnstile-request', 'sec.contact.action-wiring'],
+  },
+  {
+    id: 'turnstile.wrong-ip',
+    file: HANDLE,
+    find: '    ip: deps.ip,\n    action: TURNSTILE_ACTION,',
+    replace: "    ip: 'unknown',\n    action: TURNSTILE_ACTION,",
+    caseIds: ['sec.contact.turnstile-request', 'sec.contact.action-wiring'],
+  },
+  {
+    id: 'turnstile.wrong-action',
+    file: HANDLE,
+    find: '    action: TURNSTILE_ACTION,',
+    replace: "    action: 'login',",
+    caseIds: ['sec.contact.turnstile-request'],
+  },
+  {
+    id: 'turnstile.failure-as-sent',
+    file: HANDLE,
+    find: "    return { status: 'error', code: 'VERIFICATION_FAILED', fieldErrors: null };",
+    replace: "    return { status: 'sent' };",
+    caseIds: [
+      'sec.contact.turnstile-failed',
+      'sec.contact.turnstile-before-zod',
+      'sec.contact.no-js-no-token',
+      'sec.contact.action-wiring',
+    ],
+  },
+  {
+    id: 'turnstile.failure-sends',
+    file: HANDLE,
+    find: "  if (!verdict.ok) {\n    return { status: 'error', code: 'VERIFICATION_FAILED'",
+    replace:
+      "  if (!verdict.ok) {\n    await deps.send({ name: raw.name, email: raw.email, message: raw.message });\n\n    return { status: 'error', code: 'VERIFICATION_FAILED'",
+    caseIds: [
+      'sec.contact.turnstile-failed',
+      'sec.contact.turnstile-before-zod',
+      'sec.contact.no-js-no-token',
+      'sec.contact.action-wiring',
+    ],
+  },
+  {
+    id: 'action.no-turnstile',
+    file: ACTION,
+    find: '    verify: verifyTurnstile,',
+    replace: '    verify: async () => {\n      return { ok: true };\n    },',
     caseIds: ['sec.contact.action-wiring'],
   },
 ];

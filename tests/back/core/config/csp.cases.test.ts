@@ -4,7 +4,7 @@ import { expect, test } from 'vitest';
 
 import { CSP_CASES } from '@tests/back/core/config/csp.cases';
 
-const ALLOWED_SOURCES: readonly string[] = ['security-md', 'next-docs'];
+const ALLOWED_SOURCES: readonly string[] = ['security-md', 'next-docs', 'cloudflare-docs'];
 
 const TEST_FILE = 'tests/back/core/config/csp.test.ts';
 

@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/test';
 
 const MAIL_INFO_URL = 'http://127.0.0.1:8025/api/v1/info';
 
@@ -13,6 +13,21 @@ const MAILPIT_TIMEOUT_MS = 120_000;
 const SHUTDOWN_TIMEOUT_MS = 30_000;
 const DESKTOP = { width: 1440, height: 900 };
 const PHONE = { width: 390, height: 844 };
+
+type WebServer = Extract<
+  NonNullable<PlaywrightTestConfig['webServer']>,
+  readonly unknown[]
+>[number];
+
+const MAILPIT_SERVER: WebServer = {
+  command: 'docker compose -f docker-compose.dev.yml up mailpit',
+  url: MAIL_INFO_URL,
+  timeout: MAILPIT_TIMEOUT_MS,
+  reuseExistingServer: true,
+  stdout: 'ignore',
+  stderr: 'pipe',
+  gracefulShutdown: { signal: 'SIGTERM', timeout: SHUTDOWN_TIMEOUT_MS },
+};
 
 if (process.env['E2E_PORT'] === undefined) {
   process.env['E2E_PORT'] = execFileSync(process.execPath, ['-e', FREE_PORT_SCRIPT], {
@@ -60,15 +75,7 @@ export default defineConfig({
     },
   ],
   webServer: [
-    {
-      command: 'docker compose -f docker-compose.dev.yml up mailpit',
-      url: MAIL_INFO_URL,
-      timeout: MAILPIT_TIMEOUT_MS,
-      reuseExistingServer: true,
-      stdout: 'ignore',
-      stderr: 'pipe',
-      gracefulShutdown: { signal: 'SIGTERM', timeout: SHUTDOWN_TIMEOUT_MS },
-    },
+    ...(process.env['CI'] === undefined ? [MAILPIT_SERVER] : []),
     {
       command: 'node --import tsx tests/front/e2e/support/serve.ts',
       url: baseURL,

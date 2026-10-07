@@ -1,5 +1,5 @@
 import { generateWorld, worldTransferables } from '@/scene/world/generate-world';
-import { worldRequestSchema } from '@/scene/world/world.schema';
+import { parseWorldRequest } from '@/scene/world/world.schema';
 
 import type { WorldMessage } from '@/scene/world/world.types';
 
@@ -8,9 +8,9 @@ const post = (message: WorldMessage, transfer: Transferable[] = []): void => {
 };
 
 self.onmessage = (event: MessageEvent<unknown>): void => {
-  const request = worldRequestSchema.safeParse(event.data);
+  const request = parseWorldRequest(event.data);
 
-  if (!request.success) {
+  if (request === null) {
     post({ type: 'error' });
     self.close();
 
@@ -18,7 +18,7 @@ self.onmessage = (event: MessageEvent<unknown>): void => {
   }
 
   try {
-    const data = generateWorld(request.data, (value) => {
+    const data = generateWorld(request, (value) => {
       post({ type: 'progress', value });
     });
 

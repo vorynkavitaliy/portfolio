@@ -46,6 +46,13 @@ export const ROUTES_CASES = [
       'the plane docks at the chosen station within 40 s, and that is the only docked event',
   },
   {
+    id: 'routes.autopilot.from-hover',
+    source: 'spec',
+    reference: `${SC008}; e2e start: Home after intro-done and 5 s of hover, other stations after 5 s of hover, four headings`,
+    expected:
+      'the plane docks at the chosen station within 40 s, and that is the only docked event',
+  },
+  {
     id: 'routes.autopilot.safe',
     source: 'spec',
     reference: `${SC007}; every autopilot route`,
