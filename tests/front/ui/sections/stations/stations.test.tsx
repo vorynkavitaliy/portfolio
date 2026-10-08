@@ -107,7 +107,7 @@ const texts = (selector: string): readonly string[] => {
 };
 
 caseTest('stations.home-base.heading', 'name, tag, role and lede', async () => {
-  await render(<HomeBase cvHref={null} />);
+  await render(<HomeBase />);
 
   const headings = document.querySelectorAll('h1');
 
@@ -123,40 +123,24 @@ caseTest('stations.home-base.heading', 'name, tag, role and lede', async () => {
 });
 
 caseTest('stations.home-base.contact', 'the Contact CTA', async () => {
-  const screen = await render(<HomeBase cvHref={null} />);
+  const screen = await render(<HomeBase />);
 
   await expect
     .element(screen.getByRole('link', { name: 'Contact', exact: true }))
     .toHaveAttribute('href', '#contact');
 });
 
-caseTest('stations.home-base.cv-link', 'the CV link from the prop', async () => {
-  const screen = await render(<HomeBase cvHref="https://cv.example.test/cv.pdf" />);
-  const link = screen.getByRole('link', { name: 'Download CV', exact: true });
+caseTest('stations.home-base.no-cv', 'no CV button, no download link', async () => {
+  await render(<HomeBase />);
 
-  await expect.element(link).toHaveAttribute('href', 'https://cv.example.test/cv.pdf');
-  await expect.element(link).toHaveAttribute('download');
-
-  await link.click();
-  expect(details).toEqual([{ name: 'cv_download' }]);
-
-  await link.click();
-  expect(details).toEqual([{ name: 'cv_download' }, { name: 'cv_download' }]);
-});
-
-caseTest('stations.home-base.cv-placeholder', 'no CV address yet', async () => {
-  const screen = await render(<HomeBase cvHref={null} />);
-
-  await expect
-    .element(screen.getByRole('button', { name: 'Download CV', exact: true }))
-    .toBeDisabled();
-
+  expect(document.body.textContent).not.toMatch(/\bCV\b/i);
   expect(document.querySelectorAll('a[download]')).toHaveLength(0);
-  expect(details).toEqual([]);
+  expect(document.querySelectorAll('button')).toHaveLength(0);
+  expect(document.querySelectorAll('a')).toHaveLength(2);
 });
 
 caseTest('stations.home-base.linkedin', 'the profile link', async () => {
-  const screen = await render(<HomeBase cvHref={null} />);
+  const screen = await render(<HomeBase />);
   const link = screen.getByRole('link', { name: 'LinkedIn', exact: true });
 
   await expect.element(link).toHaveAttribute('href', LINKEDIN);
@@ -168,7 +152,7 @@ caseTest('stations.home-base.linkedin', 'the profile link', async () => {
 });
 
 caseTest('stations.home-base.facts', 'stats and chips', async () => {
-  await render(<HomeBase cvHref={null} />);
+  await render(<HomeBase />);
 
   expect(texts('[data-motion="stat-value"]')).toEqual(['7+', '20+']);
 
@@ -259,7 +243,7 @@ const renderAll = async () => {
   return render(
     <>
       <section>
-        <HomeBase cvHref={null} />
+        <HomeBase />
       </section>
 
       {BRIEFS.slice(0, 4).map((brief) => {
@@ -361,7 +345,7 @@ caseTest('stations.motion', 'motion targets are present', async () => {
 caseTest('stations.server-html', 'complete markup without client effects', () => {
   const html = renderToString(
     <>
-      <HomeBase cvHref={null} />
+      <HomeBase />
 
       {BRIEFS.map((brief) => {
         return <MissionBrief key={brief.station} station={brief.station} />;

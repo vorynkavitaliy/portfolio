@@ -154,10 +154,9 @@ Then start the shared Caddy once by hand: `ssh vorynka`, then `bash /opt/portfol
    | `CONTACT_FROM` | `Portfolio <contact@mail.vorynka.dev>` (type it without quotes) |
    | `CLIENT_IP_HEADER` | `x-real-ip` |
    | `SITE_URL` | `https://dev.vorynka.dev` in `dev`, `https://vorynka.dev` in `prod` (also baked into `robots.txt` and `sitemap.xml` at build time) |
-   | `CV_URL` | public URL of the CV PDF, or leave it unset |
    | `TURNSTILE_SITE_KEY` | Turnstile site key |
 
-   Every one except `CV_URL` is required: the deploy stops with an error naming the missing key. A value must not contain a single quote or a line break. Do this for both `dev` and `prod`.
+   Every one is required: the deploy stops with an error naming the missing key. A value must not contain a single quote or a line break. Do this for both `dev` and `prod`.
 2. Create the `dev` branch from `main` and push it: `git push -u origin dev`.
 3. **Actions → General → Workflow permissions**: "Read repository contents".
 4. Enable Dependency graph and Dependabot alerts.

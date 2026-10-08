@@ -42,7 +42,7 @@ The site has to do one job: a recruiter or a client understands in a few seconds
 
 | # | Station | Content |
 |---|---|---|
-| 1 | Home base | Name, role, years in production, number of projects, CV, LinkedIn |
+| 1 | Home base | Name, role, years in production, number of projects, LinkedIn |
 | 2 | Full cycle | From idea to production: research, spec, frontend, backend, MVP, AI |
 | 3 | Frontend | React and Next.js, Vue and Nuxt, permissions-driven UI, SEO, accessibility |
 | 4 | Backend | Node.js services: NestJS, Express, queues, PostgreSQL, Redis, integrations |
@@ -104,7 +104,6 @@ Local values live in `.env.local`, which is never committed. The template is [`.
 | `CLIENT_IP_HEADER` | yes | Header that carries the client IP for the rate limiter (`x-real-ip` behind Caddy) |
 | `SITE_URL` | yes, also at build time | Canonical origin. Baked into metadata, `robots.txt` and `sitemap.xml`; decides whether the build is indexable |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | yes | Cloudflare Turnstile widget. Test keys are rejected on a public production host |
-| `CV_URL` | no | Link behind the «Download CV» button |
 
 Rules:
 

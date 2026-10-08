@@ -192,7 +192,7 @@ export const WorldShell = ({
 
   return (
     <div data-view={view} data-boot={bootStatus}>
-      <header className="pointer-events-none fixed inset-x-4 top-4 z-20 flex items-center justify-between gap-2 pt-[env(safe-area-inset-top,0px)] *:pointer-events-auto">
+      <header className="pointer-events-none fixed inset-x-4 top-4 z-20 flex items-center justify-between gap-2 pt-[env(safe-area-inset-top,0px)] *:pointer-events-auto text-layout:inset-x-0 text-layout:top-0 text-layout:bg-ink/85 text-layout:px-4 text-layout:pt-[calc(0.75rem+env(safe-area-inset-top,0px))] text-layout:pb-3 text-layout:backdrop-blur-md">
         <StationLink
           station="home-base"
           className="font-pixel text-[1.125rem] font-semibold tracking-[0.04em] text-text no-underline [text-shadow:0_2px_0_var(--color-shadow)]"

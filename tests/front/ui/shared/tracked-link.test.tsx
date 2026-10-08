@@ -28,14 +28,14 @@ afterEach(() => {
 
 caseTest('tracked-link.renders', 'plain anchor by default', async () => {
   const screen = await render(
-    <TrackedLink href="/cv.pdf" event={{ name: 'cv_download' }} className="btn">
-      CV
+    <TrackedLink href="/plain" event={{ name: 'take_off' }} className="btn">
+      Plain
     </TrackedLink>,
   );
 
-  const link = screen.getByRole('link', { name: 'CV', exact: true });
+  const link = screen.getByRole('link', { name: 'Plain', exact: true });
 
-  await expect.element(link).toHaveAttribute('href', '/cv.pdf');
+  await expect.element(link).toHaveAttribute('href', '/plain');
   await expect.element(link).toHaveClass('btn');
   await expect.element(link).not.toHaveAttribute('target');
   await expect.element(link).not.toHaveAttribute('rel');
@@ -79,21 +79,6 @@ caseTest('tracked-link.two-clicks', 'each click is an action', async () => {
   await link.click();
 
   expect(details).toEqual([{ name: 'email_copy' }, { name: 'email_copy' }]);
-});
-
-caseTest('tracked-link.cv', 'CV download is reported and downloads', async () => {
-  const screen = await render(
-    <TrackedLink href="/cv.pdf" download event={{ name: 'cv_download' }}>
-      CV
-    </TrackedLink>,
-  );
-
-  const link = screen.getByRole('link', { name: 'CV', exact: true });
-
-  await expect.element(link).toHaveAttribute('download');
-  await link.click();
-
-  expect(details).toEqual([{ name: 'cv_download' }]);
 });
 
 caseTest('tracked-link.linkedin', 'LinkedIn click', async () => {

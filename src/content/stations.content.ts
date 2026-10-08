@@ -17,7 +17,6 @@ export const STATIONS_COPY: StationsCopy = {
     role: 'Full-stack Developer · AI Engineer',
     lede: 'Builds web products end to end: interface, backend, deploy. 7+ years in production, 20+ projects.',
     contactCta: 'Contact',
-    cv: { label: 'Download CV' },
     linkedin: { label: 'LinkedIn', href: LINKEDIN_HREF },
     stats: [
       { value: '7+', caption: 'years in production' },
@@ -57,7 +56,7 @@ export const STATIONS_COPY: StationsCopy = {
     label: 'Frontend',
     tag: 'Frontend · 7+ years',
     title: 'Interfaces in React and Vue',
-    lede: 'The main focus. React and Next.js, Vue and Nuxt, all in TypeScript.',
+    lede: 'Main focus. Works as a React developer and a Vue developer, with Next.js and Nuxt, all in TypeScript.',
     items: [
       'The interface adapts to user rights: roles, permissions, an access check on every screen.',
       'Micro-frontends built from widgets, with real-time data updates.',
@@ -90,7 +89,7 @@ export const STATIONS_COPY: StationsCopy = {
     label: 'Backend',
     tag: 'Backend',
     title: 'Services on Node.js',
-    lede: 'Backend on NestJS and Express: APIs, queues, databases, auth.',
+    lede: 'Node.js developer for the backend: NestJS and Express, APIs, queues, databases, auth.',
     items: [
       'Microservices: Node.js and Python services talk over RabbitMQ.',
       'Redis holds one auth session for all services: one token, one refresh.',
@@ -244,7 +243,7 @@ export const STATIONS_COPY: StationsCopy = {
     label: 'Contact',
     tag: 'Open channel',
     title: 'Open a channel',
-    lede: 'Have an idea, a role or a project? Send a message. Every message gets a reply. Available now, remote or in Kyiv.',
+    lede: 'Have an idea, a role or a project? Send a message. Every message gets a reply. Available now, remote or in Kyiv, Ukraine.',
     email: 'vitaliivorynka@gmail.com',
     copy: { idle: 'Copy', done: 'Copied' },
     linkedin: { label: 'linkedin.com/in/vitaliy-vorynka-7b6005142', href: LINKEDIN_HREF },

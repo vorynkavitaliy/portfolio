@@ -1,7 +1,13 @@
 import { expect, vi } from 'vitest';
 
 import { caseTest } from '@tests/back/server/mail/mail.case-test';
-import { buildContactMail, createContactMailer, transportOptions } from '@/server/mail/mail';
+import {
+  buildAutoReplyMail,
+  buildContactMail,
+  createAutoReplier,
+  createContactMailer,
+  transportOptions,
+} from '@/server/mail/mail';
 
 import type { ServerEnv } from '@/core/config/server-env';
 import type { ContactMessage, MailTransport, OutgoingMail } from '@/server/mail/mail.types';
@@ -283,3 +289,127 @@ caseTest(
     vi.doUnmock('nodemailer');
   },
 );
+
+const HOSTILE: ContactMessage = {
+  name: 'Buy pills at evil.test',
+  email: 'victim@example.test',
+  message: 'Cheap pills http://evil.test/buy?x=1\r\nBcc: spam@evil.test',
+};
+
+const withoutTo = (mail: OutgoingMail): Omit<OutgoingMail, 'to'> => {
+  const { to: _to, ...rest } = mail;
+
+  return rest;
+};
+
+caseTest(
+  'sec.mail.autoreply.envelope',
+  'fixed from, replyTo and subject, visitor in to',
+  async () => {
+    const outbox: Outbox = fakeOutbox();
+
+    expect(await createAutoReplier(outbox.transport, ENV)('ann@example.test')).toEqual({
+      ok: true,
+    });
+
+    expect(outbox.sent).toHaveLength(1);
+
+    const mail = outbox.sent[0];
+
+    expect(mail?.from).toBe('site@example.test');
+    expect(mail?.to).toBe('ann@example.test');
+    expect(mail?.replyTo).toBe('owner@example.test');
+    expect(mail?.subject).toBe('Thanks, I got your message');
+  },
+);
+
+caseTest('sec.mail.autoreply.no-visitor-text', 'nothing the visitor typed is relayed', () => {
+  const hostile: OutgoingMail = buildAutoReplyMail(HOSTILE.email, ENV);
+  const other: OutgoingMail = buildAutoReplyMail('someone@example.test', ENV);
+
+  expect(withoutTo(hostile)).toEqual(withoutTo(other));
+  expect(hostile.to).toBe('victim@example.test');
+
+  const rest: string = JSON.stringify(withoutTo(hostile));
+
+  for (const typed of [HOSTILE.name, HOSTILE.message, 'evil.test', 'victim', 'pills', 'Bcc']) {
+    expect(rest).not.toContain(typed);
+  }
+
+  expect(Object.keys(hostile).sort()).toEqual(['from', 'html', 'replyTo', 'subject', 'text', 'to']);
+});
+
+caseTest('sec.mail.autoreply.body', 'copy and an email-safe html', () => {
+  const mail: OutgoingMail = buildAutoReplyMail('ann@example.test', ENV);
+
+  expect(mail.text).toBe(
+    "Hi,\n\nThanks for writing. Your message is in my inbox, and I'll reply to this address soon. If you want to add something, just reply to this email.\n\nVitalii Vorynka\nFull-stack Developer · AI Engineer\nvorynka.dev",
+  );
+
+  const html: string = mail.html ?? '';
+
+  for (const part of [
+    'Message received',
+    "Thanks for writing. Your message is in my inbox, and I'll reply to this address soon. If you want to add something, just reply to this email.",
+    'Vitalii Vorynka',
+    'Full-stack Developer · AI Engineer',
+    'href="https://vorynka.dev"',
+    '#070a12',
+    '#e4e8f0',
+    '#a5adbf',
+    '#ffaa00',
+    '<table',
+    'style="',
+  ]) {
+    expect(html).toContain(part);
+  }
+
+  expect(html).not.toMatch(/<img|<link|<script|<style|@import|url\(|@font-face/i);
+  expect(html.match(/https?:\/\/[^"'\s<)]+/g)).toEqual(['https://vorynka.dev']);
+  expect(mail.text + html).not.toContain('—');
+});
+
+caseTest('sec.mail.autoreply.failure', 'only the code is logged', async () => {
+  const log = vi.spyOn(console, 'error').mockImplementation(() => {
+    return undefined;
+  });
+
+  const providerText = '550 rejected victim@example.test';
+  const error = Object.assign(new Error(providerText), { code: 'EAUTH', response: providerText });
+
+  expect(await createAutoReplier(failingTransport(error), ENV)('victim@example.test')).toEqual({
+    ok: false,
+    code: 'SEND_FAILED',
+  });
+
+  expect(log.mock.calls).toEqual([['contact.autoreply.failed', 'EAUTH']]);
+});
+
+caseTest('sec.mail.autoreply.shared-transport', 'one transport for both mails', async () => {
+  const outbox: Outbox = fakeOutbox();
+
+  const createTransport = vi.fn(() => {
+    return outbox.transport;
+  });
+
+  vi.resetModules();
+
+  vi.doMock('nodemailer', () => {
+    return { createTransport };
+  });
+
+  const mail = await import('@/server/mail/mail');
+
+  expect(await mail.sendContactMail(MESSAGE)).toEqual({ ok: true });
+  expect(await mail.sendAutoReply(MESSAGE.email)).toEqual({ ok: true });
+
+  expect(createTransport).toHaveBeenCalledTimes(1);
+
+  expect(
+    outbox.sent.map((sent) => {
+      return sent.to;
+    }),
+  ).toEqual(['owner@test.invalid', 'ann@example.test']);
+
+  vi.doUnmock('nodemailer');
+});

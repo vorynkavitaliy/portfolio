@@ -2,8 +2,6 @@ import { STATIONS_COPY } from '@/content/stations.content';
 import { StationLink } from '@/shared/station-link.client';
 import { TrackedLink } from '@/shared/tracked-link.client';
 
-type HomeBaseProps = Readonly<{ cvHref: string | null }>;
-
 const COPY = STATIONS_COPY['home-base'];
 
 const BUTTON =
@@ -12,7 +10,7 @@ const BUTTON =
 const BUTTON_SIGNAL = `${BUTTON} pixel-edge bg-signal text-on-signal shadow-btn-signal hover:brightness-105`;
 const BUTTON_PLAIN = `${BUTTON} pixel-edge bg-surface text-white shadow-btn-plain hover:shadow-btn-plain-hover`;
 
-export const HomeBase = ({ cvHref }: HomeBaseProps) => {
+export const HomeBase = () => {
   return (
     <>
       <p
@@ -43,28 +41,6 @@ export const HomeBase = ({ cvHref }: HomeBaseProps) => {
           <StationLink station="contact" className={BUTTON_SIGNAL} magnet>
             {COPY.contactCta}
           </StationLink>
-        </div>
-
-        <div data-motion="item">
-          {cvHref === null ? (
-            <button
-              type="button"
-              disabled
-              data-cv-placeholder=""
-              className={`${BUTTON_PLAIN} cursor-not-allowed opacity-60`}
-            >
-              {COPY.cv.label}
-            </button>
-          ) : (
-            <TrackedLink
-              href={cvHref}
-              event={{ name: 'cv_download' }}
-              download
-              className={BUTTON_PLAIN}
-            >
-              {COPY.cv.label}
-            </TrackedLink>
-          )}
         </div>
 
         <div data-motion="item">

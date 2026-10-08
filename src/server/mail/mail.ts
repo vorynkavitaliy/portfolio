@@ -4,7 +4,9 @@ import { createTransport } from 'nodemailer';
 import { z } from 'zod';
 
 import { getServerEnv } from '@/core/config/server-env';
+import { AUTO_REPLY_COPY, autoReplyHtml, autoReplyText } from '@/server/mail/auto-reply';
 import {
+  AUTO_REPLY_FAILED_LOG,
   CONTACT_SUBJECT_PREFIX,
   MAIL_FAILED_LOG,
   SMTPS_PORT,
@@ -16,6 +18,7 @@ import {
 import type { SMTPTransportOptions } from 'nodemailer/lib/smtp-transport';
 import type { ServerEnv } from '@/core/config/server-env';
 import type {
+  AutoReplier,
   ContactMailer,
   ContactMessage,
   MailResult,
@@ -82,14 +85,56 @@ export const createContactMailer = (transport: MailTransport, env: ServerEnv): C
   };
 };
 
-let contactMailer: ContactMailer | null = null;
+export const buildAutoReplyMail = (
+  visitorEmail: string,
+  env: Pick<ServerEnv, 'CONTACT_FROM' | 'CONTACT_TO'>,
+): OutgoingMail => {
+  return {
+    from: env.CONTACT_FROM,
+    to: visitorEmail,
+    replyTo: env.CONTACT_TO,
+    subject: AUTO_REPLY_COPY.subject,
+    text: autoReplyText(AUTO_REPLY_COPY),
+    html: autoReplyHtml(AUTO_REPLY_COPY),
+  };
+};
 
-export const sendContactMail = (message: ContactMessage): Promise<MailResult> => {
-  if (contactMailer === null) {
+export const createAutoReplier = (transport: MailTransport, env: ServerEnv): AutoReplier => {
+  return async (visitorEmail: string): Promise<MailResult> => {
+    try {
+      await transport.sendMail(buildAutoReplyMail(visitorEmail, env));
+
+      return { ok: true };
+    } catch (error) {
+      console.error(AUTO_REPLY_FAILED_LOG, errorCodeOf(error));
+
+      return { ok: false, code: 'SEND_FAILED' };
+    }
+  };
+};
+
+type Mailers = Readonly<{ contact: ContactMailer; autoReply: AutoReplier }>;
+
+let mailers: Mailers | null = null;
+
+const sharedMailers = (): Mailers => {
+  if (mailers === null) {
     const env: ServerEnv = getServerEnv();
+    const transport: MailTransport = createTransport(transportOptions(env));
 
-    contactMailer = createContactMailer(createTransport(transportOptions(env)), env);
+    mailers = {
+      contact: createContactMailer(transport, env),
+      autoReply: createAutoReplier(transport, env),
+    };
   }
 
-  return contactMailer(message);
+  return mailers;
+};
+
+export const sendContactMail = (message: ContactMessage): Promise<MailResult> => {
+  return sharedMailers().contact(message);
+};
+
+export const sendAutoReply = (visitorEmail: string): Promise<MailResult> => {
+  return sharedMailers().autoReply(visitorEmail);
 };

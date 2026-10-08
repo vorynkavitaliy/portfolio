@@ -34,13 +34,6 @@ export const TRACKED_LINK_CASES = [
     expected: 'two clicks dispatch two events',
   },
   {
-    id: 'tracked-link.cv',
-    source: 'spec',
-    reference: 'FR-053 (CV download)',
-    expected:
-      'with download and event cv_download the anchor has a download attribute and the click reports cv_download',
-  },
-  {
     id: 'tracked-link.linkedin',
     source: 'spec',
     reference: 'FR-053 (LinkedIn click)',

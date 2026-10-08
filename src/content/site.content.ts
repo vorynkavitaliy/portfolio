@@ -1,7 +1,7 @@
 import type { SiteCopy } from '@/content/content.types';
 
 export const SITE_COPY: SiteCopy = {
-  title: 'Vitalii Vorynka · Full-stack Developer · Vue, React, Node.js, NestJS',
+  title: 'Vitalii Vorynka · Full-stack Developer: Vue, React, Node.js',
   ogTitle: 'Vitalii Vorynka · Full-stack Developer, AI Engineer',
   description:
     'Full-stack developer, 7+ years in production. React, Next.js, Vue, Node.js, NestJS, Docker, CI/CD, LLMs and AI agents. A 3D world portfolio with a text version.',
@@ -12,11 +12,11 @@ export const SITE_COPY: SiteCopy = {
     'full-stack developer',
     'AI engineer',
     'React developer',
-    'Next.js developer',
+    'Next.js',
     'Vue developer',
-    'Nuxt developer',
+    'Nuxt',
     'Node.js developer',
-    'NestJS developer',
+    'NestJS',
     'TypeScript',
     'LLM integration',
     'RAG',

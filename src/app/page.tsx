@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 
 import { STATIONS_COPY } from '@/content/stations.content';
 import { WORLD_COPY } from '@/content/world.content';
-import { getCvHref } from '@/core/config/cv-url';
 import { STATION_IDS, type StationId } from '@/core/world/stations';
 import { Contact } from '@/sections/contact/contact.component';
 import { HomeBase } from '@/sections/home-base/home-base.component';
@@ -25,10 +24,10 @@ const STATION_LABELS: readonly string[] = STATION_IDS.map((id) => {
   return STATIONS_COPY[id].label;
 });
 
-const renderStation = (station: StationId, cvHref: string | null): ReactNode => {
+const renderStation = (station: StationId): ReactNode => {
   switch (station) {
     case 'home-base':
-      return <HomeBase cvHref={cvHref} />;
+      return <HomeBase />;
     case 'systems':
       return <Systems />;
     case 'contact':
@@ -46,8 +45,6 @@ const renderStation = (station: StationId, cvHref: string | null): ReactNode => 
 export default async function HomePage() {
   await connection();
 
-  const cvHref: string | null = getCvHref();
-
   return (
     <WorldShell
       copy={SHELL_COPY}
@@ -58,7 +55,7 @@ export default async function HomePage() {
       {STATION_IDS.map((station) => {
         return (
           <StationFrame key={station} station={station} takeOff={TAKE_OFF}>
-            {renderStation(station, cvHref)}
+            {renderStation(station)}
           </StationFrame>
         );
       })}

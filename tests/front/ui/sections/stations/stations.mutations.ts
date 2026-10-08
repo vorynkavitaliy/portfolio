@@ -37,39 +37,20 @@ export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
     caseIds: ['stations.home-base.contact'],
   },
   {
-    id: 'home-cv-not-download',
+    id: 'home-cv-button-back',
     file: HOME,
-    find: '              download\n',
-    replace: '',
-    caseIds: ['stations.home-base.cv-link'],
+    find: '        <div data-motion="item">\n          <TrackedLink',
+    replace:
+      '        <div data-motion="item">\n          <button type="button">Download CV</button>\n        </div>\n\n        <div data-motion="item">\n          <TrackedLink',
+    caseIds: ['stations.home-base.no-cv'],
   },
   {
-    id: 'home-cv-event',
+    id: 'home-download-link-back',
     file: HOME,
-    find: "event={{ name: 'cv_download' }}",
-    replace: "event={{ name: 'email_copy' }}",
-    caseIds: ['stations.home-base.cv-link'],
-  },
-  {
-    id: 'home-cv-placeholder-enabled',
-    file: HOME,
-    find: '              disabled\n',
-    replace: '',
-    caseIds: ['stations.home-base.cv-placeholder'],
-  },
-  {
-    id: 'home-cv-always-link',
-    file: HOME,
-    find: 'cvHref === null ? (',
-    replace: 'false ? (',
-    caseIds: ['stations.home-base.cv-placeholder'],
-  },
-  {
-    id: 'home-cv-never-link',
-    file: HOME,
-    find: 'cvHref === null ? (',
-    replace: 'true ? (',
-    caseIds: ['stations.home-base.cv-link'],
+    find: '<TrackedLink\n            href={COPY.linkedin.href}',
+    replace:
+      '<a href="/cv.pdf" download>CV</a>\n          <TrackedLink\n            href={COPY.linkedin.href}',
+    caseIds: ['stations.home-base.no-cv'],
   },
   {
     id: 'home-linkedin-same-tab',
@@ -82,7 +63,7 @@ export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
     id: 'home-linkedin-event',
     file: HOME,
     find: "event={{ name: 'linkedin_click' }}",
-    replace: "event={{ name: 'cv_download' }}",
+    replace: "event={{ name: 'email_copy' }}",
     caseIds: ['stations.home-base.linkedin'],
   },
   {

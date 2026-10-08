@@ -229,6 +229,10 @@
     margin-top: 16px;
   }
 
+  [data-contact-form][hidden] {
+    display: none;
+  }
+
   .motion-word-mask {
     display: inline-block;
     vertical-align: top;
@@ -469,11 +473,71 @@
 
   .status {
     min-height: 1.4em;
+    margin-top: 10px;
     color: var(--color-muted);
     font-size: 0.9rem;
   }
 
+  .status-error {
+    color: var(--color-alert);
+  }
+
+  .btn-plain {
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: var(--shadow-btn-plain);
+  }
+
+  .btn-plain:hover:not(:disabled) {
+    box-shadow: var(--shadow-btn-plain-hover);
+  }
+
+  .sent {
+    display: grid;
+    justify-items: start;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 20px;
+    background: var(--color-result-bg);
+    color: var(--color-result-text);
+    box-shadow:
+      var(--shadow-outline-signal),
+      0 0 16px --alpha(var(--color-signal) / 35%);
+  }
+
+  .sent-mark {
+    width: 48px;
+    height: 48px;
+    fill: var(--color-signal);
+  }
+
+  .sent-title {
+    font-family: var(--font-pixel);
+    color: var(--color-signal);
+    font-size: var(--text-heading);
+  }
+
+  .sent-title:focus {
+    outline: none;
+  }
+
+  .sent-title:focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 4px;
+  }
+
+  @keyframes sent-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
   @media (prefers-reduced-motion: no-preference) {
+    .sent {
+      animation: sent-in 320ms ease-out;
+    }
+
     .field input,
     .field textarea {
       transition: box-shadow 140ms;

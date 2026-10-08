@@ -20,6 +20,9 @@ const FILL_MARGIN_MS = 300;
 const COPIED_RESET_MS = 1600;
 const SUBJECT_PREFIX = 'Portfolio contact:';
 const STATUS_SENT = 'Message sent. A reply comes by email.';
+const SUCCESS_TITLE = 'Message sent';
+const SUCCESS_TEXT = 'Thanks. The reply comes to the email you entered.';
+const SUCCESS_AGAIN = 'Send another message';
 const STATUS_INVALID = 'Message not sent. Check the marked fields.';
 
 const STATUS_RATE_LIMITED =
@@ -88,6 +91,10 @@ const submitButton = (page: Page): Locator => {
 
 const status = (page: Page): Locator => {
   return page.locator('#status');
+};
+
+const successPanel = (page: Page): Locator => {
+  return page.locator('[data-contact-sent]');
 };
 
 const openForm = async (page: Page): Promise<void> => {
@@ -292,23 +299,33 @@ test.describe('always-fail Turnstile secret', () => {
   });
 });
 
-test('sec.contact.valid-send: one mail with fixed envelope, text body only, analytics once', async ({
+test('sec.contact.valid-send: two mails, the owner one with a fixed envelope and text only, the visitor one an auto-reply, analytics once', async ({
   page,
 }, info) => {
   onlyDesktop(info);
 
   const token: string = freshToken();
   const message = `Hello from the e2e suite ${token}`;
+  const visitorEmail = `ada.${freshToken()}@visitor.test`;
 
   await collectAnalytics(page);
   await openForm(page);
   await waitMinimumFill(page);
 
-  await fillForm(page, { name: '  Ada Lovelace  ', email: 'ada@visitor.test', message });
+  await fillForm(page, { name: '  Ada Lovelace  ', email: visitorEmail, message });
   await submitButton(page).click();
 
   await expect(status(page)).toHaveText(STATUS_SENT);
+  await expect(successPanel(page)).toBeVisible();
+  await expect(successPanel(page).getByRole('heading', { name: SUCCESS_TITLE })).toBeFocused();
+  await expect(successPanel(page)).toContainText(SUCCESS_TEXT);
+  await expect(page.locator('[data-contact-form]')).toBeHidden();
+
+  await successPanel(page).getByRole('link', { name: SUCCESS_AGAIN }).click();
+  await expect(successPanel(page)).toHaveCount(0);
+  await expect(field(page, 'name')).toBeFocused();
   await expect(field(page, 'name')).toHaveValue('');
+  await expect(field(page, 'message')).toHaveValue('');
 
   const messages = await waitForMessages(token, 1);
 
@@ -318,14 +335,37 @@ test('sec.contact.valid-send: one mail with fixed envelope, text body only, anal
 
   expect(mail?.from).toBe(CONTACT_FROM);
   expect(mail?.to).toEqual([CONTACT_TO]);
-  expect(mail?.replyTo).toEqual(['ada@visitor.test']);
+  expect(mail?.replyTo).toEqual([visitorEmail]);
   expect(mail?.subject).toBe(`${SUBJECT_PREFIX} Ada Lovelace`);
 
   expect(mail?.text.replace(/\r\n/g, '\n').trim()).toBe(
-    `Name: Ada Lovelace\nEmail: ada@visitor.test\n\n${message}`,
+    `Name: Ada Lovelace\nEmail: ${visitorEmail}\n\n${message}`,
   );
 
   expect(mail?.html).toBe('');
+
+  const both = await waitForMessages(`addressed:${visitorEmail}`, 2);
+
+  expect(both).toHaveLength(2);
+
+  expect(
+    both.filter((entry) => {
+      return entry.to.includes(CONTACT_TO);
+    }),
+  ).toHaveLength(1);
+
+  const reply = both.find((entry) => {
+    return entry.to.includes(visitorEmail);
+  });
+
+  expect(reply?.from).toBe(CONTACT_FROM);
+  expect(reply?.to).toEqual([visitorEmail]);
+  expect(reply?.replyTo).toEqual([CONTACT_TO]);
+  expect(reply?.subject).toBe('Thanks, I got your message');
+  expect(reply?.text).toContain('Thanks for writing. Your message is in my inbox');
+  expect(reply?.html).toContain('#ffaa00');
+  expect(`${reply?.text}${reply?.html}`).not.toContain('Ada Lovelace');
+  expect(`${reply?.text}${reply?.html}`).not.toContain(token);
 
   const sent = (await readAnalytics(page)).filter((event) => {
     return event.name === 'contact_sent';
@@ -453,12 +493,10 @@ test('sec.contact.burst: the 4th send from one IP is rate limited and values are
 
     await submitButton(page).click();
     await expect(status(page)).toHaveText(STATUS_SENT);
+    await expect(successPanel(page)).toBeVisible();
+    await successPanel(page).getByRole('link', { name: SUCCESS_AGAIN }).click();
     await expect(field(page, 'name')).toHaveValue('');
     await expect(submitButton(page)).toBeEnabled();
-
-    if (index < 3) {
-      await page.locator('body').click({ position: { x: 1, y: 1 } });
-    }
   }
 
   const fourth = `Burst message number 4 ${token}`;

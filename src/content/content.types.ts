@@ -14,7 +14,6 @@ export type HomeBaseCopy = StationBase<'home-base'> &
     role: string;
     lede: string;
     contactCta: string;
-    cv: Readonly<{ label: string }>;
     linkedin: LinkCopy;
     stats: readonly FigureCopy[];
     chips: readonly string[];
@@ -98,6 +97,7 @@ export type ContactFormCopy = Readonly<{
     emailTooLong: string;
     messageTooLong: string;
   };
+  success: { title: string; text: string; again: string };
   status: {
     invalid: string;
     sent: string;

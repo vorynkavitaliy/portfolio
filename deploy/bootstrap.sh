@@ -11,7 +11,7 @@ readonly AUTO_UPGRADES="/etc/apt/apt.conf.d/20auto-upgrades"
 readonly DOCKER_KEYRING="/etc/apt/keyrings/docker.asc"
 readonly DOCKER_LIST="/etc/apt/sources.list.d/docker.list"
 readonly KEY_PATTERN='^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(256|384|521)|sk-ssh-ed25519@openssh\.com|sk-ecdsa-sha2-nistp256@openssh\.com) [A-Za-z0-9+/=]+( .*)?$'
-readonly APP_ENV_NAMES=(SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS CONTACT_FROM CONTACT_TO CLIENT_IP_HEADER SITE_URL CV_URL TURNSTILE_SITE_KEY TURNSTILE_SECRET_KEY)
+readonly APP_ENV_NAMES=(SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS CONTACT_FROM CONTACT_TO CLIENT_IP_HEADER SITE_URL TURNSTILE_SITE_KEY TURNSTILE_SECRET_KEY)
 readonly EDGE_ENV_NAMES=(PROD_DOMAIN DEV_DOMAIN)
 readonly SWAP_FILE="/swapfile"
 readonly SWAP_SYSCTL="/etc/sysctl.d/99-portfolio-swap.conf"

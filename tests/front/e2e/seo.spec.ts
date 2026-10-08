@@ -12,7 +12,7 @@ const PNG_HEIGHT_OFFSET = 20;
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
-const TITLE = 'Vitalii Vorynka · Full-stack Developer · Vue, React, Node.js, NestJS';
+const TITLE = 'Vitalii Vorynka · Full-stack Developer: Vue, React, Node.js';
 const OG_TITLE = 'Vitalii Vorynka · Full-stack Developer, AI Engineer';
 
 const DESCRIPTION =
@@ -25,11 +25,11 @@ const KEYWORDS: readonly string[] = [
   'full-stack developer',
   'AI engineer',
   'React developer',
-  'Next.js developer',
+  'Next.js',
   'Vue developer',
-  'Nuxt developer',
+  'Nuxt',
   'Node.js developer',
-  'NestJS developer',
+  'NestJS',
   'TypeScript',
   'LLM integration',
   'RAG',

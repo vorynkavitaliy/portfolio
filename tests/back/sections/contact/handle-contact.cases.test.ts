@@ -8,6 +8,7 @@ const ALLOWED_SOURCES: readonly string[] = [
   'security-md',
   'spec',
   'owner-2026-10-07',
+  'owner-2026-10-08',
   'cloudflare-docs',
 ];
 

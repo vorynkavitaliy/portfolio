@@ -1,4 +1,4 @@
-export type StationsCaseSource = 'spec' | 'prototype' | 'content';
+export type StationsCaseSource = 'spec' | 'prototype' | 'content' | 'owner-2026-10-08';
 
 export type StationsCase = Readonly<{
   id: string;
@@ -24,18 +24,11 @@ export const STATIONS_CASES = [
     expected: 'a link "Contact" to #contact',
   },
   {
-    id: 'stations.home-base.cv-link',
-    source: 'spec',
-    reference: 'plan S19: CV href comes from the prop, click is tracked',
+    id: 'stations.home-base.no-cv',
+    source: 'owner-2026-10-08',
+    reference: 'owner 2026-10-08: remove «Download CV» from home base',
     expected:
-      'with an href the "Download CV" link points to it, has the download attribute and emits cv_download once per click',
-  },
-  {
-    id: 'stations.home-base.cv-placeholder',
-    source: 'spec',
-    reference: 'plan S19: a null CV href renders a placeholder button',
-    expected:
-      'without an href "Download CV" is a disabled button and no link with that name exists',
+      'home base shows no CV text, no button and no download link; only the Contact and LinkedIn links remain',
   },
   {
     id: 'stations.home-base.linkedin',
