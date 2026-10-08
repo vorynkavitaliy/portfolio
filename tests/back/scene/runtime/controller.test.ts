@@ -68,15 +68,15 @@ caseTest('controller.dock.store', 'docking writes flight and visited', () => {
   const { store, runtime } = setup();
 
   runtime.applyEvent({ type: 'docked', station: 2, firstVisit: true });
-  expect(store.getSnapshot().flight).toEqual({ mode: 'docked', station: 'marketplace-chat' });
-  expect(store.getSnapshot().visited).toEqual(['marketplace-chat']);
+  expect(store.getSnapshot().flight).toEqual({ mode: 'docked', station: 'frontend' });
+  expect(store.getSnapshot().visited).toEqual(['frontend']);
 });
 
 caseTest('controller.dock.track-once', 'one analytics event per docking', () => {
   const { events, runtime } = setup();
 
   runtime.applyEvent({ type: 'docked', station: 2, firstVisit: true });
-  expect(events).toEqual([{ name: 'station_docked', station: 'marketplace-chat' }]);
+  expect(events).toEqual([{ name: 'station_docked', station: 'frontend' }]);
 });
 
 caseTest('controller.dock.effects', 'dock pulse on the docked beam', () => {

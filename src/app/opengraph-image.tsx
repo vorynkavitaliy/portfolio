@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og';
 import type { CSSProperties } from 'react';
 
 import { SITE_COPY } from '@/content/site.content';
+import { STATIONS_COPY } from '@/content/stations.content';
 import { PALETTE_TOKENS } from '@/core/styles/palette.tokens';
 
 export const alt: string = SITE_COPY.ogAlt;
@@ -39,7 +40,7 @@ export default function OpengraphImage() {
 
       <div style={RULE_STYLE} />
 
-      <div style={ROLE_STYLE}>{SITE_COPY.person.jobTitle}</div>
+      <div style={ROLE_STYLE}>{STATIONS_COPY['home-base'].role}</div>
     </div>,
     { ...size },
   );

@@ -4,7 +4,12 @@ import { expect, test } from 'vitest';
 
 import { WORLD_ACTIONS_CASES } from '@tests/back/core/world/world-actions.cases';
 
-const ALLOWED_SOURCES: readonly string[] = ['spec', 'owner-2026-10-07', 'prototype'];
+const ALLOWED_SOURCES: readonly string[] = [
+  'spec',
+  'owner-2026-10-07',
+  'owner-2026-10-08',
+  'prototype',
+];
 
 const TEST_FILE = 'tests/back/core/world/world-actions.test.ts';
 

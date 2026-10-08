@@ -7,7 +7,7 @@ import { caseTest } from '@tests/back/content/content.facts.case-test';
 import {
   ALL_STRINGS,
   FORBIDDEN_LIST_PATH,
-  LLM_PRODUCT_STRINGS,
+  FULL_CYCLE_STRINGS,
   STATION_STRINGS,
   containsTerm,
   forbiddenNames,
@@ -15,7 +15,6 @@ import {
 } from '@tests/back/content/content.facts.support';
 import { ALLOWED_NUMBERS, numericTokens } from '@tests/back/content/content.facts.numbers';
 import { CONTACT_FORM_COPY } from '@/content/contact-form.content';
-import { STATIONS_COPY } from '@/content/stations.content';
 
 const AI_TELLS: readonly RegExp[] = [
   /\b(delve|tapestry|realm|embark|beacon|multifaceted|paradigm|synergy|myriad|plethora|meticulous|intricate|utilize|supercharge|turbocharge|game-changer)\b/i,
@@ -171,32 +170,19 @@ caseTest('content.no-phone', 'no phone number in any string', () => {
 });
 
 caseTest(
-  'content.llm-product.no-internals',
-  'no pipeline, minute or PDF in the llm-product copy',
+  'content.full-cycle.no-internals',
+  'no pipeline, minute or PDF in the full-cycle copy',
   () => {
-    const hits: readonly string[] = LLM_PRODUCT_STRINGS.filter((entry) => {
+    const hits: readonly string[] = FULL_CYCLE_STRINGS.filter((entry) => {
       return /pipeline|minute|\bpdf\b/i.test(entry.text);
     }).map((entry) => {
       return entry.path;
     });
 
-    expect(LLM_PRODUCT_STRINGS.length).toBeGreaterThan(0);
+    expect(FULL_CYCLE_STRINGS.length).toBeGreaterThan(0);
     expect(hits).toEqual([]);
   },
 );
-
-caseTest('content.missions.exactly-three', 'exactly three Mission n of 3 stations', () => {
-  const tags: readonly string[] = Object.values(STATIONS_COPY)
-    .map((station) => {
-      return station.tag;
-    })
-    .filter((tag) => {
-      return /^Mission \d+ of \d+$/.test(tag);
-    })
-    .sort();
-
-  expect(tags).toEqual(['Mission 1 of 3', 'Mission 2 of 3', 'Mission 3 of 3']);
-});
 
 caseTest('content.station-copy.no-pronouns', 'no pronoun as a word in station copy', () => {
   const hits: readonly string[] = STATION_STRINGS.filter((entry) => {
@@ -242,7 +228,13 @@ caseTest('content.numbers.verified', 'every number is in the verified list', () 
 });
 
 caseTest('content.numbers.allow-list-sourced', 'every allowed number cites its source', () => {
-  const sources: readonly string[] = ['facts', 'spec', 'security-md', 'owner-2026-10-07'];
+  const sources: readonly string[] = [
+    'facts',
+    'spec',
+    'security-md',
+    'owner-2026-10-07',
+    'owner-2026-10-08',
+  ];
 
   for (const entry of ALLOWED_NUMBERS) {
     expect(sources).toContain(entry.source);

@@ -13,12 +13,12 @@ export const SKIP_REASON = 'world flight specs run in desktop-1440 only';
 
 export const STATION_LABELS = {
   'home-base': 'Home base',
-  'llm-product': 'LLM product',
-  'marketplace-chat': 'Marketplace chat',
-  'admin-app': 'Admin app',
-  'ai-engineering': 'AI engineering',
+  'full-cycle': 'Full cycle',
+  frontend: 'Frontend',
+  backend: 'Backend',
+  ai: 'AI',
   systems: 'Systems',
-  'flight-log': 'Flight log',
+  deploy: 'Deploy',
   'this-world': 'This world',
   contact: 'Contact',
 } as const;

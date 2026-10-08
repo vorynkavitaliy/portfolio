@@ -13,12 +13,12 @@ const caseTitle = (id: TextVersionCaseId, description: string): string => {
 
 const SPEC_STATION_ORDER: readonly string[] = [
   'home-base',
-  'llm-product',
-  'marketplace-chat',
-  'admin-app',
-  'ai-engineering',
+  'full-cycle',
+  'frontend',
+  'backend',
+  'ai',
+  'deploy',
   'systems',
-  'flight-log',
   'this-world',
   'contact',
 ];

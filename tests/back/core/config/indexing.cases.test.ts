@@ -2,17 +2,11 @@ import { readFileSync } from 'node:fs';
 
 import { expect, test } from 'vitest';
 
-import { CONTENT_FACTS_CASES } from '@tests/back/content/content.facts.cases';
+import { INDEXING_CASES } from '@tests/back/core/config/indexing.cases';
 
-const ALLOWED_SOURCES: readonly string[] = [
-  'spec',
-  'facts',
-  'owner-2026-10-07',
-  'owner-2026-10-08',
-  'security-md',
-];
+const ALLOWED_SOURCES: readonly string[] = ['owner-2026-10-08', 'next-docs'];
 
-const TEST_FILE = 'tests/back/content/content.facts.test.ts';
+const TEST_FILE = 'tests/back/core/config/indexing.test.ts';
 
 test('every case id has a test and every test id exists in the catalogue', () => {
   const source: string = readFileSync(TEST_FILE, 'utf8');
@@ -21,7 +15,7 @@ test('every case id has a test and every test id exists in the catalogue', () =>
     return match[1] ?? '';
   });
 
-  const known: readonly string[] = CONTENT_FACTS_CASES.map((entry) => {
+  const known: readonly string[] = INDEXING_CASES.map((entry) => {
     return entry.id;
   });
 
@@ -41,7 +35,7 @@ test('every case id has a test and every test id exists in the catalogue', () =>
 });
 
 test('case ids are unique', () => {
-  const ids: readonly string[] = CONTENT_FACTS_CASES.map((entry) => {
+  const ids: readonly string[] = INDEXING_CASES.map((entry) => {
     return entry.id;
   });
 
@@ -49,14 +43,8 @@ test('case ids are unique', () => {
 });
 
 test('every case names an allowed source and a reference', () => {
-  for (const entry of CONTENT_FACTS_CASES) {
+  for (const entry of INDEXING_CASES) {
     expect(ALLOWED_SOURCES).toContain(entry.source);
     expect(entry.reference).not.toBe('');
   }
-});
-
-test('the suite has no focused, skipped or todo tests', () => {
-  const source: string = readFileSync(TEST_FILE, 'utf8');
-
-  expect(source).not.toMatch(/\b(test|it|describe)\.(only|skip|todo|fails)\b/);
 });

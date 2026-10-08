@@ -8,7 +8,7 @@ import { createNavOverlay } from '@/scene/nav/nav-overlay';
 import type { NavFrame, NavOverlay } from '@/scene/nav/nav-overlay';
 import type { StationId } from '@/core/world/stations';
 
-const IDS: readonly StationId[] = ['home-base', 'llm-product', 'marketplace-chat'];
+const IDS: readonly StationId[] = ['home-base', 'full-cycle', 'frontend'];
 const LABELS = ['Alpha', 'Beta', 'Gamma'] as const;
 const TEMPLATE = '{name} · {distance}m';
 const WIDTH = 1280;
@@ -108,9 +108,9 @@ caseTest('nav.projection', 'the label follows the lifted station top', () => {
   const x = Math.round((ndc.x * 0.5 + 0.5) * WIDTH);
   const y = Math.round((-ndc.y * 0.5 + 0.5) * HEIGHT);
 
-  expect(labelOf('llm-product').dataset['visible']).toBe('true');
+  expect(labelOf('full-cycle').dataset['visible']).toBe('true');
 
-  expect(labelOf('llm-product').style.transform).toBe(
+  expect(labelOf('full-cycle').style.transform).toBe(
     `translate(${x}px, ${y}px) translate(-50%, -100%)`,
   );
 
@@ -121,8 +121,8 @@ caseTest('nav.projection', 'the label follows the lifted station top', () => {
 caseTest('nav.visible', 'range, side and behind', () => {
   overlay.update(frameOf([AHEAD, BEHIND, OFF_SIDE], -1));
   expect(labelOf('home-base').dataset['visible']).toBe('true');
-  expect(labelOf('llm-product').dataset['visible']).toBe('false');
-  expect(labelOf('marketplace-chat').dataset['visible']).toBe('false');
+  expect(labelOf('full-cycle').dataset['visible']).toBe('false');
+  expect(labelOf('frontend').dataset['visible']).toBe('false');
 
   const far = { x: 0, y: 18, z: -170 };
 
@@ -135,10 +135,10 @@ caseTest('nav.visible', 'range, side and behind', () => {
 
 caseTest('nav.target', 'only the target is marked', () => {
   overlay.update(frameOf([AHEAD, BEHIND, RIGHT], 1));
-  expect(labelOf('llm-product').hasAttribute('data-target')).toBe(true);
+  expect(labelOf('full-cycle').hasAttribute('data-target')).toBe(true);
   expect(labelOf('home-base').hasAttribute('data-target')).toBe(false);
   overlay.update(frameOf([AHEAD, BEHIND, RIGHT], 0));
-  expect(labelOf('llm-product').hasAttribute('data-target')).toBe(false);
+  expect(labelOf('full-cycle').hasAttribute('data-target')).toBe(false);
   expect(labelOf('home-base').hasAttribute('data-target')).toBe(true);
   overlay.update(frameOf([AHEAD, BEHIND, RIGHT], -1));
   expect(root.querySelector('[data-target]')).toBeNull();
@@ -149,7 +149,7 @@ caseTest('nav.edge', 'the edge follows an off-screen target', () => {
   expect(edgeOf().hidden).toBe(false);
   expect(edgeOf().querySelector('.nav-edge-name')?.textContent).toBe('Beta · 63m');
   expect(edgeOf().style.transform).toBe('translate(640px, 56px) translate(-50%, -50%)');
-  expect(labelOf('llm-product').dataset['visible']).toBe('false');
+  expect(labelOf('full-cycle').dataset['visible']).toBe('false');
   overlay.update(frameOf([AHEAD, BEHIND, RIGHT], 0));
   expect(edgeOf().hidden).toBe(true);
   overlay.update(frameOf([AHEAD, BEHIND, RIGHT], 2));

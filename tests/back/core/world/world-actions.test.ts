@@ -36,12 +36,12 @@ const FAILED: WorldSnapshot = { ...IDLE, boot: { status: 'failed', reason: 'time
 caseTest('world.stations.order', 'nine ids in prototype order', () => {
   expect([...STATION_IDS]).toEqual([
     'home-base',
-    'llm-product',
-    'marketplace-chat',
-    'admin-app',
-    'ai-engineering',
+    'full-cycle',
+    'frontend',
+    'backend',
+    'ai',
+    'deploy',
     'systems',
-    'flight-log',
     'this-world',
     'contact',
   ]);
@@ -53,7 +53,7 @@ caseTest('world.stations.count', 'there are nine stations', () => {
 
 caseTest('world.stations.index', 'index is the array position', () => {
   expect(stationIndex('home-base')).toBe(0);
-  expect(stationIndex('systems')).toBe(5);
+  expect(stationIndex('systems')).toBe(6);
   expect(stationIndex('contact')).toBe(8);
 });
 
@@ -283,7 +283,7 @@ caseTest('world.actions.visited.dedupe', 'a station counts once', () => {
 caseTest('world.actions.visited.count', 'Linked 4/9 after three further stations', () => {
   let state: WorldSnapshot = addVisited(IDLE, 'home-base');
 
-  for (const id of ['llm-product', 'systems', 'contact'] as const) {
+  for (const id of ['full-cycle', 'systems', 'contact'] as const) {
     state = addVisited(state, id);
   }
 

@@ -7,7 +7,6 @@ import { WORLD_COPY } from '@/content/world.content';
 import { getCvHref } from '@/core/config/cv-url';
 import { STATION_IDS, type StationId } from '@/core/world/stations';
 import { Contact } from '@/sections/contact/contact.component';
-import { FlightLog } from '@/sections/flight-log/flight-log.component';
 import { HomeBase } from '@/sections/home-base/home-base.component';
 import { MissionBrief } from '@/sections/mission-brief/mission-brief.component';
 import { Systems } from '@/sections/systems/systems.component';
@@ -32,14 +31,13 @@ const renderStation = (station: StationId, cvHref: string | null): ReactNode => 
       return <HomeBase cvHref={cvHref} />;
     case 'systems':
       return <Systems />;
-    case 'flight-log':
-      return <FlightLog />;
     case 'contact':
       return <Contact />;
-    case 'llm-product':
-    case 'marketplace-chat':
-    case 'admin-app':
-    case 'ai-engineering':
+    case 'full-cycle':
+    case 'frontend':
+    case 'backend':
+    case 'ai':
+    case 'deploy':
     case 'this-world':
       return <MissionBrief station={station} />;
   }

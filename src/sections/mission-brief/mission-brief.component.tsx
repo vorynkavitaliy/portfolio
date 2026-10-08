@@ -42,19 +42,21 @@ export const MissionBrief = ({ station }: MissionBriefProps) => {
         })}
       </ul>
 
-      <ul className="m-0 mt-4.5 flex list-none flex-wrap gap-1.5 p-0">
-        {copy.chips.map((chip) => {
-          return (
-            <li
-              key={chip}
-              data-motion="chip"
-              className="bg-surface px-2.25 py-0.75 text-chip-sm shadow-outline"
-            >
-              {chip}
-            </li>
-          );
-        })}
-      </ul>
+      {copy.chips.length === 0 ? null : (
+        <ul className="m-0 mt-4.5 flex list-none flex-wrap gap-1.5 p-0">
+          {copy.chips.map((chip) => {
+            return (
+              <li
+                key={chip}
+                data-motion="chip"
+                className="bg-surface px-2.25 py-0.75 text-chip-sm shadow-outline"
+              >
+                {chip}
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <p
         data-motion="result"

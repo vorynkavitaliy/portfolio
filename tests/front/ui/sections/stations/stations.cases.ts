@@ -7,7 +7,7 @@ export type StationsCase = Readonly<{
   expected: string;
 }>;
 
-const PROTOTYPE_PANELS = 'prototype panels (:245-325)';
+const PROTOTYPE_PANELS = 'owner-approved copy v2 (copy-v2-en.md)';
 
 export const STATIONS_CASES = [
   {
@@ -48,14 +48,15 @@ export const STATIONS_CASES = [
     id: 'stations.home-base.facts',
     source: 'prototype',
     reference: `${PROTOTYPE_PANELS} stats and chips`,
-    expected: 'stats 7+ / 2+ with their captions and the eight technology chips in order',
+    expected:
+      'stats 7+ years in production / 20+ projects and the ten technology chips of the copy file in order',
   },
   {
     id: 'stations.brief.heading',
     source: 'prototype',
     reference: `${PROTOTYPE_PANELS} missions`,
     expected:
-      'each of the five brief stations renders one h2 with the id "<station>-title" and its title',
+      'each of the six brief stations renders one h2 with the id "<station>-title" and its title',
   },
   {
     id: 'stations.brief.body',
@@ -69,35 +70,28 @@ export const STATIONS_CASES = [
     source: 'prototype',
     reference: `${PROTOTYPE_PANELS} systems`,
     expected:
-      'h2 id systems-title, the five group headings in order, Frontend with "7+ yrs", Node.js with "2 yrs", every chip of a group under its heading',
-  },
-  {
-    id: 'stations.flight-log',
-    source: 'prototype',
-    reference: `${PROTOTYPE_PANELS} flight log`,
-    expected:
-      'h2 id flight-log-title and an ordered list of six entries, newest first, each with years, h3 role and summary',
+      'h2 id systems-title, the six group headings in order (Frontend, Backend, Integrations, DevOps, AI, Tools and 3D), no years labels, every chip of a group under its heading',
   },
   {
     id: 'stations.heading-order',
     source: 'spec',
     reference: 'FR-045 and WCAG 1.3.1 (one h1, one h2 per station, h3 only below an h2)',
     expected:
-      'all seven sections together hold one h1, seven h2 with unique ids and no h3 before the first h2 of its section',
+      'all eight sections together hold one h1, seven h2 with unique ids and no h3 before the first h2 of its section',
   },
   {
     id: 'stations.motion',
     source: 'spec',
     reference: 'plan §5.9 motion targets',
     expected:
-      'every section has data-motion tag, title and lede (or items for the log), brief sections have chip and result, home base has stat and stat-value',
+      'every section has data-motion tag, title and item; brief sections have lede and result, and chips only where the copy lists chips; systems has no lede, home base has stat and stat-value',
   },
   {
     id: 'stations.server-html',
     source: 'spec',
     reference: 'SC no-JS shows all stations; FR-002',
     expected:
-      'rendering the seven sections to a string without client effects contains every title, the name, the role and every flight log entry',
+      'rendering the sections to a string without client effects contains every title, the name, the role and the stack title',
   },
 ] as const satisfies readonly StationsCase[];
 
