@@ -20,7 +20,7 @@ type WebServer = Extract<
 >[number];
 
 const MAILPIT_SERVER: WebServer = {
-  command: 'docker compose -f docker-compose.dev.yml up mailpit',
+  command: 'docker compose -f docker/compose.local.yml up mailpit',
   url: MAIL_INFO_URL,
   timeout: MAILPIT_TIMEOUT_MS,
   reuseExistingServer: true,
@@ -36,6 +36,54 @@ if (process.env['E2E_PORT'] === undefined) {
 }
 
 const baseURL = `http://localhost:${process.env['E2E_PORT']}`;
+
+type Project = NonNullable<PlaywrightTestConfig['projects']>[number];
+
+const ALL_PROJECTS: readonly Project[] = [
+  {
+    name: 'desktop-1440',
+    use: { ...devices['Desktop Chrome'], viewport: DESKTOP },
+  },
+  {
+    name: 'mobile-390',
+    use: { ...devices['iPhone 14'], viewport: PHONE },
+  },
+  {
+    name: 'no-webgl',
+    use: {
+      ...devices['Desktop Chrome'],
+      viewport: DESKTOP,
+      launchOptions: { args: ['--disable-gpu', '--disable-3d-apis', '--disable-webgl'] },
+    },
+  },
+  {
+    name: 'reduced-motion',
+    use: { ...devices['Desktop Chrome'], viewport: DESKTOP, reducedMotion: 'reduce' },
+  },
+];
+
+const SMOKE_SPECS: Readonly<Record<string, readonly string[]>> = {
+  'desktop-1440': [
+    'first-screen.spec.ts',
+    'text-version.spec.ts',
+    'seo.spec.ts',
+    'contact-form.spec.ts',
+    'content-html.spec.ts',
+    'environment.spec.ts',
+  ],
+  'no-webgl': ['fallbacks.spec.ts'],
+  'reduced-motion': ['reduced-motion.spec.ts'],
+};
+
+const isSmoke: boolean = process.env['E2E_SMOKE'] === '1';
+
+const projects: Project[] = isSmoke
+  ? ALL_PROJECTS.flatMap((project) => {
+      const specs: readonly string[] | undefined = SMOKE_SPECS[project.name ?? ''];
+
+      return specs === undefined ? [] : [{ ...project, testMatch: [...specs] }];
+    })
+  : [...ALL_PROJECTS];
 
 export default defineConfig({
   testDir: 'tests/front/e2e',
@@ -53,28 +101,7 @@ export default defineConfig({
     colorScheme: 'dark',
     trace: 'retain-on-failure',
   },
-  projects: [
-    {
-      name: 'desktop-1440',
-      use: { ...devices['Desktop Chrome'], viewport: DESKTOP },
-    },
-    {
-      name: 'mobile-390',
-      use: { ...devices['iPhone 14'], viewport: PHONE },
-    },
-    {
-      name: 'no-webgl',
-      use: {
-        ...devices['Desktop Chrome'],
-        viewport: DESKTOP,
-        launchOptions: { args: ['--disable-gpu', '--disable-3d-apis', '--disable-webgl'] },
-      },
-    },
-    {
-      name: 'reduced-motion',
-      use: { ...devices['Desktop Chrome'], viewport: DESKTOP, reducedMotion: 'reduce' },
-    },
-  ],
+  projects,
   webServer: [
     ...(process.env['CI'] === undefined ? [MAILPIT_SERVER] : []),
     {

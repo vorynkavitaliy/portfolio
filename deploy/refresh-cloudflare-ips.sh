@@ -2,7 +2,7 @@
 set -euo pipefail
 
 readonly APP_DIR="${APP_DIR:-/opt/portfolio}"
-readonly CADDY_SNIPPET="${APP_DIR}/caddy/cloudflare-ips.caddy"
+readonly CADDY_SNIPPET="${APP_DIR}/edge/caddy/cloudflare-ips.caddy"
 readonly IPS_V4_URL="https://www.cloudflare.com/ips-v4"
 readonly IPS_V6_URL="https://www.cloudflare.com/ips-v6"
 readonly RULE_COMMENT="cloudflare"
@@ -69,7 +69,7 @@ write_caddy_snippet() {
 
 reload_caddy() {
   local container
-  container="$(docker ps -q --filter label=com.docker.compose.project=portfolio --filter label=com.docker.compose.service=caddy)"
+  container="$(docker ps -q --filter label=com.docker.compose.project=portfolio-edge --filter label=com.docker.compose.service=caddy)"
   if [[ -n "$container" ]]; then
     docker exec "$container" caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
     log "caddy reloaded"
@@ -78,7 +78,7 @@ reload_caddy() {
 
 main() {
   [[ "$(id -u)" -eq 0 ]] || die "run as root"
-  [[ -d "${APP_DIR}/caddy" ]] || die "${APP_DIR}/caddy is missing"
+  [[ -d "${APP_DIR}/edge/caddy" ]] || die "${APP_DIR}/edge/caddy is missing"
 
   local -a v4 v6
   mapfile -t v4 < <(fetch_ranges "$IPS_V4_URL" "$V4_CIDR" "$MIN_V4_RANGES")

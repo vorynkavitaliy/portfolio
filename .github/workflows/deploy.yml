@@ -1,54 +1,77 @@
 name: Deploy
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
+  push:
+    branches: [dev]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [dev, prod]
+        default: dev
 
 permissions: {}
 
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
-
 env:
   IMAGE: ghcr.io/vorynkavitaliy/portfolio
-  RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
 
 jobs:
+  resolve:
+    name: Resolve environment
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      environment: ${{ steps.resolve.outputs.environment }}
+    steps:
+      - name: Resolve and guard
+        id: resolve
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_ENVIRONMENT: ${{ inputs.environment }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "${EVENT_NAME}" = "push" ]; then
+            target=dev
+          else
+            target="${INPUT_ENVIRONMENT}"
+          fi
+          case "${target}" in
+            dev) expected_ref=refs/heads/dev ;;
+            prod) expected_ref=refs/heads/main ;;
+            *) echo "::error::Unknown environment ${target}."; exit 1 ;;
+          esac
+          if [ "${REF}" != "${expected_ref}" ]; then
+            echo "::error::${target} deploys only from ${expected_ref}, got ${REF}."
+            exit 1
+          fi
+          printf 'environment=%s\n' "${target}" >> "$GITHUB_OUTPUT"
+
   image:
     name: Build and push image
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.head_branch == 'main' &&
-       github.event.workflow_run.head_repository.full_name == github.repository)
+    needs: resolve
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    environment: ${{ needs.resolve.outputs.environment }}
+    concurrency:
+      group: image-${{ needs.resolve.outputs.environment }}
+      cancel-in-progress: ${{ needs.resolve.outputs.environment == 'dev' }}
     permissions:
       contents: read
       packages: write
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
+    env:
+      TARGET_ENV: ${{ needs.resolve.outputs.environment }}
     steps:
-      - name: Refuse non-main manual runs
-        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
-        run: |
-          echo "::error::Deploy only from main."
-          exit 1
-
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.RELEASE_SHA }}
           persist-credentials: false
 
       - name: Compute tag
         id: tag
-        run: printf 'tag=sha-%s\n' "${RELEASE_SHA:0:7}" >> "$GITHUB_OUTPUT"
+        run: printf 'tag=%s-sha-%s\n' "${TARGET_ENV}" "${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
@@ -64,34 +87,39 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
+          file: docker/Dockerfile
           push: true
           platforms: linux/amd64
           build-args: |
             SITE_URL=${{ vars.SITE_URL }}
           tags: |
             ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
-            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ env.TARGET_ENV }}-latest
           labels: |
             org.opencontainers.image.source=https://github.com/vorynkavitaliy/portfolio
-            org.opencontainers.image.revision=${{ env.RELEASE_SHA }}
+            org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.licenses=MIT
           provenance: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ env.TARGET_ENV }}
+          cache-to: type=gha,mode=max,scope=${{ env.TARGET_ENV }}
 
   deploy:
     name: Deploy to server
-    needs: image
+    needs: [resolve, image]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    environment: production
+    environment: ${{ needs.resolve.outputs.environment }}
     permissions:
       contents: read
+    concurrency:
+      group: deploy-server
+      cancel-in-progress: false
+    env:
+      TARGET_ENV: ${{ needs.resolve.outputs.environment }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.RELEASE_SHA }}
           persist-credentials: false
 
       - name: Configure SSH
@@ -103,7 +131,7 @@ jobs:
         run: |
           for name in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS; do
             if [ -z "${!name}" ]; then
-              echo "::error::Secret ${name} is required in the production environment."
+              echo "::error::Secret ${name} is required in the ${TARGET_ENV} environment."
               exit 1
             fi
           done
@@ -124,17 +152,60 @@ jobs:
             printf '  ServerAliveInterval 15\n'
           } > ~/.ssh/config
 
-      - name: Sync server files
+      - name: Sync app files
         run: |
-          scp docker-compose.prod.yml deploy/deploy.sh portfolio-server:/opt/portfolio/
-          scp deploy/caddy/Caddyfile portfolio-server:/opt/portfolio/caddy/Caddyfile
+          scp docker/compose.app.yml "portfolio-server:/opt/portfolio/${TARGET_ENV}/compose.app.yml"
+          scp deploy/deploy.sh "portfolio-server:/opt/portfolio/${TARGET_ENV}/deploy.sh"
+
+      - name: Write app env
+        env:
+          SMTP_HOST: ${{ vars.SMTP_HOST }}
+          SMTP_PORT: ${{ vars.SMTP_PORT }}
+          SMTP_USER: ${{ vars.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          CONTACT_FROM: ${{ vars.CONTACT_FROM }}
+          CONTACT_TO: ${{ secrets.CONTACT_TO }}
+          CLIENT_IP_HEADER: ${{ vars.CLIENT_IP_HEADER }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          CV_URL: ${{ vars.CV_URL }}
+          TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+        run: |
+          required=(SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS CONTACT_FROM CONTACT_TO CLIENT_IP_HEADER SITE_URL TURNSTILE_SITE_KEY TURNSTILE_SECRET_KEY)
+          for name in "${required[@]}"; do
+            if [ -z "${!name}" ]; then
+              echo "::error::${name} is required in the ${TARGET_ENV} environment."
+              exit 1
+            fi
+          done
+          content=""
+          for name in "${required[@]}" CV_URL; do
+            value="${!name}"
+            case "${value}" in
+              *"'"* | *$'\n'* | *$'\r'*)
+                echo "::error::${name} must not contain a single quote or a line break."
+                exit 1
+                ;;
+            esac
+            content+="$(printf "%s='%s'" "${name}" "${value}")"$'\n'
+          done
+          remote="umask 077 && cat > /opt/portfolio/${TARGET_ENV}/.env.next && mv -f /opt/portfolio/${TARGET_ENV}/.env.next /opt/portfolio/${TARGET_ENV}/.env"
+          printf '%s' "${content}" | ssh portfolio-server "${remote}"
+
+      - name: Sync and deploy edge
+        if: env.TARGET_ENV == 'prod'
+        run: |
+          scp docker/compose.edge.yml portfolio-server:/opt/portfolio/edge/compose.edge.yml
+          scp docker/caddy/Caddyfile portfolio-server:/opt/portfolio/edge/caddy/Caddyfile.next
+          ssh portfolio-server bash /opt/portfolio/prod/deploy.sh edge
 
       - name: Deploy and verify health
         env:
           TAG: ${{ needs.image.outputs.tag }}
         run: |
-          [[ "${TAG}" =~ ^sha-[0-9a-f]{7}$ ]] || { echo "::error::Unexpected tag ${TAG}"; exit 1; }
-          ssh portfolio-server bash /opt/portfolio/deploy.sh "${TAG}"
+          [[ "${TAG}" =~ ^(dev|prod)-sha-[0-9a-f]{7}$ && "${TAG}" == "${TARGET_ENV}-"* ]] || { echo "::error::Unexpected tag ${TAG}"; exit 1; }
+          remote="bash /opt/portfolio/${TARGET_ENV}/deploy.sh ${TARGET_ENV} ${TAG}"
+          ssh portfolio-server "${remote}"
 
       - name: Remove SSH material
         if: always()

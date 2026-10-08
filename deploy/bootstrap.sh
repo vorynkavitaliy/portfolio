@@ -11,11 +11,14 @@ readonly AUTO_UPGRADES="/etc/apt/apt.conf.d/20auto-upgrades"
 readonly DOCKER_KEYRING="/etc/apt/keyrings/docker.asc"
 readonly DOCKER_LIST="/etc/apt/sources.list.d/docker.list"
 readonly KEY_PATTERN='^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(256|384|521)|sk-ssh-ed25519@openssh\.com|sk-ecdsa-sha2-nistp256@openssh\.com) [A-Za-z0-9+/=]+( .*)?$'
-readonly ENV_NAMES=(SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS CONTACT_FROM CONTACT_TO CLIENT_IP_HEADER SITE_URL CV_URL TURNSTILE_SITE_KEY TURNSTILE_SECRET_KEY SITE_DOMAIN)
+readonly APP_ENV_NAMES=(SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS CONTACT_FROM CONTACT_TO CLIENT_IP_HEADER SITE_URL CV_URL TURNSTILE_SITE_KEY TURNSTILE_SECRET_KEY)
+readonly EDGE_ENV_NAMES=(PROD_DOMAIN DEV_DOMAIN)
+readonly SWAP_FILE="/swapfile"
+readonly SWAP_SYSCTL="/etc/sysctl.d/99-portfolio-swap.conf"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
-readonly REPO_DIR="${SCRIPT_DIR}/.."
+readonly DOCKER_DIR="${SCRIPT_DIR}/../docker"
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -39,8 +42,8 @@ check_host() {
   os_version="$(os_field VERSION_ID)"
   [[ "$os_id" == "ubuntu" && "$os_version" == "24.04" ]] || die "expected Ubuntu 24.04, found ${os_id:-?} ${os_version:-?}"
   local file
-  for file in "${REPO_DIR}/docker-compose.prod.yml" "${SCRIPT_DIR}/caddy/Caddyfile" "${SCRIPT_DIR}/deploy.sh" "${SCRIPT_DIR}/refresh-cloudflare-ips.sh"; do
-    [[ -f "$file" ]] || die "missing ${file}; copy the repo's deploy/ folder and docker-compose.prod.yml next to each other"
+  for file in "${DOCKER_DIR}/compose.edge.yml" "${DOCKER_DIR}/compose.app.yml" "${DOCKER_DIR}/caddy/Caddyfile" "${SCRIPT_DIR}/deploy.sh" "${SCRIPT_DIR}/refresh-cloudflare-ips.sh"; do
+    [[ -f "$file" ]] || die "missing ${file}; copy the repo's deploy/ and docker/ folders next to each other"
   done
 }
 
@@ -144,25 +147,53 @@ CONF
   systemctl enable --now unattended-upgrades >/dev/null
 }
 
-setup_app_dir() {
-  log "preparing ${APP_DIR}"
-  install -d -m 750 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "$APP_DIR" "${APP_DIR}/caddy"
-  install -d -m 700 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "${APP_DIR}/caddy/certs"
-  install -m 644 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "${REPO_DIR}/docker-compose.prod.yml" "${APP_DIR}/docker-compose.prod.yml"
-  install -m 644 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "${SCRIPT_DIR}/caddy/Caddyfile" "${APP_DIR}/caddy/Caddyfile"
-  install -m 755 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "${SCRIPT_DIR}/deploy.sh" "${APP_DIR}/deploy.sh"
-  if [[ ! -f "${APP_DIR}/.env" ]]; then
+write_env_template() {
+  local file="$1"
+  shift
+  if [[ ! -f "$file" ]]; then
     local name
     (
       umask 077
-      for name in "${ENV_NAMES[@]}"; do
+      for name in "$@"; do
         printf '%s=\n' "$name"
-      done >"${APP_DIR}/.env"
+      done >"$file"
     )
-    log "created ${APP_DIR}/.env template; fill it before the first deploy"
+    log "created ${file} template; fill it before the first deploy"
   fi
-  chown "$DEPLOY_USER:$DEPLOY_USER" "${APP_DIR}/.env"
-  chmod 600 "${APP_DIR}/.env"
+  chown "$DEPLOY_USER:$DEPLOY_USER" "$file"
+  chmod 600 "$file"
+}
+
+setup_swap() {
+  log "ensuring 1 GB swap"
+  if ! swapon --show=NAME --noheadings | grep -qxF "$SWAP_FILE"; then
+    if [[ ! -f "$SWAP_FILE" ]]; then
+      fallocate -l 1G "$SWAP_FILE"
+    fi
+    chmod 600 "$SWAP_FILE"
+    if ! blkid -t TYPE=swap "$SWAP_FILE" >/dev/null 2>&1; then
+      mkswap "$SWAP_FILE" >/dev/null
+    fi
+    swapon "$SWAP_FILE"
+  fi
+  grep -qE "^${SWAP_FILE}[[:space:]]" /etc/fstab || printf '%s none swap sw 0 0\n' "$SWAP_FILE" >>/etc/fstab
+  printf 'vm.swappiness=10\n' >"$SWAP_SYSCTL"
+  sysctl -q -p "$SWAP_SYSCTL"
+}
+
+setup_app_dir() {
+  log "preparing ${APP_DIR}"
+  install -d -m 750 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "$APP_DIR" "${APP_DIR}/edge" "${APP_DIR}/edge/caddy" "${APP_DIR}/dev" "${APP_DIR}/prod"
+  install -d -m 700 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "${APP_DIR}/edge/caddy/certs"
+  install -m 644 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "${DOCKER_DIR}/compose.edge.yml" "${APP_DIR}/edge/compose.edge.yml"
+  install -m 644 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "${DOCKER_DIR}/caddy/Caddyfile" "${APP_DIR}/edge/caddy/Caddyfile"
+  install -m 644 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "${DOCKER_DIR}/compose.app.yml" "${APP_DIR}/dev/compose.app.yml"
+  install -m 644 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "${DOCKER_DIR}/compose.app.yml" "${APP_DIR}/prod/compose.app.yml"
+  install -m 755 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "${SCRIPT_DIR}/deploy.sh" "${APP_DIR}/dev/deploy.sh"
+  install -m 755 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "${SCRIPT_DIR}/deploy.sh" "${APP_DIR}/prod/deploy.sh"
+  write_env_template "${APP_DIR}/edge/.env" "${EDGE_ENV_NAMES[@]}"
+  write_env_template "${APP_DIR}/dev/.env" "${APP_ENV_NAMES[@]}"
+  write_env_template "${APP_DIR}/prod/.env" "${APP_ENV_NAMES[@]}"
 }
 
 setup_firewall() {
@@ -173,7 +204,7 @@ setup_firewall() {
   ufw allow 22/tcp comment ssh >/dev/null
   ufw delete allow 80/tcp >/dev/null 2>&1 || true
   ufw delete allow 443/tcp >/dev/null 2>&1 || true
-  APP_DIR="$APP_DIR" "$REFRESH_BIN"
+  env APP_DIR="$APP_DIR" "$REFRESH_BIN"
   ufw --force enable >/dev/null
   ufw status verbose
 }
@@ -215,6 +246,7 @@ main() {
 
   install_packages
   install_docker
+  setup_swap
   create_deploy_user "${keys[@]}"
   setup_app_dir
   setup_firewall
@@ -224,7 +256,7 @@ main() {
   harden_ssh
 
   log "done. Before closing this root session, check in a NEW terminal: ssh ${DEPLOY_USER}@<server-ip> docker ps"
-  log "next: put the Cloudflare Origin certificate into ${APP_DIR}/caddy/certs/ and fill ${APP_DIR}/.env (see deploy/README.md)"
+  log "next: put the Cloudflare Origin certificate into ${APP_DIR}/edge/caddy/certs/ and fill ${APP_DIR}/{edge,dev,prod}/.env (see deploy/README.md)"
 }
 
 main "$@"

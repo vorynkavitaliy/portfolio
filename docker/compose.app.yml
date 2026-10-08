@@ -1,0 +1,28 @@
+services:
+  web:
+    image: ghcr.io/vorynkavitaliy/portfolio:${TAG:?TAG is set by deploy.sh}
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: '1'
+      NODE_OPTIONS: --max-old-space-size=384
+    ports:
+      - 127.0.0.1:${APP_PORT:?APP_PORT is set by deploy.sh}:3000
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+      - /app/.next/cache:size=64m,uid=1001,gid=1001
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    memswap_limit: 512m
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
