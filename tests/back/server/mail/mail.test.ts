@@ -224,6 +224,14 @@ caseTest('sec.mail.tls.min-version', 'TLS 1.2 minimum, verification untouched', 
   expect(hostOptions('127.0.0.1', 1025).tls).toEqual({ minVersion: 'TLSv1.2' });
 });
 
+caseTest('sec.mail.timeouts', 'a blocked SMTP port fails fast', () => {
+  const options = transportOptions(ENV);
+
+  expect([options.connectionTimeout, options.greetingTimeout, options.socketTimeout]).toEqual([
+    10000, 10000, 20000,
+  ]);
+});
+
 caseTest('sec.mail.auth-and-host', 'host, port and credentials from env', () => {
   const options = transportOptions(ENV);
 
@@ -262,6 +270,9 @@ caseTest(
           requireTLS: true,
           auth: { user: 'test-user', pass: 'test-pass-not-real' },
           tls: { minVersion: 'TLSv1.2' },
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 20000,
         },
       ],
     ]);

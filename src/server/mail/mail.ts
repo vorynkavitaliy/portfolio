@@ -8,6 +8,7 @@ import {
   CONTACT_SUBJECT_PREFIX,
   MAIL_FAILED_LOG,
   SMTPS_PORT,
+  SMTP_TIMEOUTS_MS,
   SUBJECT_NAME_MAX,
   UNKNOWN_MAIL_ERROR,
 } from '@/server/mail/mail.constants';
@@ -61,6 +62,9 @@ export const transportOptions = (env: ServerEnv): SMTPTransportOptions => {
     requireTLS: !secure && !LOOPBACK_HOST.test(env.SMTP_HOST),
     auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
     tls: { minVersion: 'TLSv1.2' },
+    connectionTimeout: SMTP_TIMEOUTS_MS.connection,
+    greetingTimeout: SMTP_TIMEOUTS_MS.greeting,
+    socketTimeout: SMTP_TIMEOUTS_MS.socket,
   };
 };
 

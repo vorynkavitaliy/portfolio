@@ -149,7 +149,7 @@ Then start the shared Caddy once by hand: `ssh vorynka`, then `bash /opt/portfol
    | Variable | Value |
    |---|---|
    | `SMTP_HOST` | `smtp.resend.com` |
-   | `SMTP_PORT` | `465` |
+   | `SMTP_PORT` | `2587` (DigitalOcean blocks outbound 25, 465 and 587; Resend also listens on 2465 and 2587, STARTTLS on 2587) |
    | `SMTP_USER` | `resend` |
    | `CONTACT_FROM` | `Portfolio <contact@mail.vorynka.dev>` (type it without quotes) |
    | `CLIENT_IP_HEADER` | `x-real-ip` |

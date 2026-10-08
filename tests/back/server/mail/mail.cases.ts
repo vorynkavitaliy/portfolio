@@ -1,4 +1,5 @@
-export type MailCaseSource = 'security-md' | 'spec' | 'nodemailer-docs' | 'owner-2026-10-07';
+export type MailCaseSource =
+  'security-md' | 'spec' | 'nodemailer-docs' | 'owner-2026-10-07' | 'owner-2026-10-08';
 
 export type MailCase = Readonly<{
   id: string;
@@ -118,6 +119,13 @@ export const MAIL_CASES = [
     source: 'owner-2026-10-07',
     reference: 'contact-form stack «tls.minVersion TLSv1.2, certificate verification on»',
     expected: 'tls is exactly { minVersion: TLSv1.2 } (no rejectUnauthorized override)',
+  },
+  {
+    id: 'sec.mail.timeouts',
+    source: 'owner-2026-10-08',
+    reference:
+      'owner 2026-10-08: the dev form hung on «Sending…» because the host blocks SMTP 465/587; a closed port must fail fast',
+    expected: 'connectionTimeout 10000, greetingTimeout 10000, socketTimeout 20000 (ms)',
   },
   {
     id: 'sec.mail.auth-and-host',

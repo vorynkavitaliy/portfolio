@@ -127,6 +127,13 @@ export const MAIL_MUTATIONS: readonly MailMutation[] = [
     caseIds: ['sec.mail.tls.smtps'],
   },
   {
+    id: 'timeouts.connection-default',
+    file: MAIL,
+    find: '    connectionTimeout: SMTP_TIMEOUTS_MS.connection,\n',
+    replace: '',
+    caseIds: ['sec.mail.timeouts', 'sec.mail.transport.lazy-once'],
+  },
+  {
     id: 'tls.require-dropped',
     file: MAIL,
     find: 'requireTLS: !secure && !LOOPBACK_HOST.test(env.SMTP_HOST),',
