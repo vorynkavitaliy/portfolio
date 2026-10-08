@@ -3,7 +3,7 @@ import type { WorldCopy } from '@/content/content.types';
 export const WORLD_COPY: WorldCopy = {
   loader: {
     name: 'VITALII VORYNKA',
-    line: 'Full-stack dev with AI engineering. Take the controls.',
+    line: 'Full-stack Developer · AI Engineer. Take the controls.',
     stages: {
       generating: 'Generating world',
       engine: 'Loading engine',

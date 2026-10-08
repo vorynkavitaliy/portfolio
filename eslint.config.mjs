@@ -234,6 +234,7 @@ const NEXT_CONVENTION_FILES = [
   'src/app/**/global-error.tsx',
   'src/app/**/manifest.ts',
   'src/app/**/icon.tsx',
+  'src/app/**/icon1.tsx',
   'src/app/**/apple-icon.tsx',
   'src/app/**/opengraph-image.tsx',
   'src/app/**/twitter-image.tsx',

@@ -1,4 +1,4 @@
-export type WorldActionsCaseSource = 'spec' | 'owner-2026-10-07' | 'prototype';
+export type WorldActionsCaseSource = 'spec' | 'owner-2026-10-07' | 'owner-2026-10-08' | 'prototype';
 
 export type WorldActionsCase = Readonly<{
   id: string;
@@ -14,10 +14,10 @@ const FAILS = 'FR-004 (no WebGL2, chunk or renderer failure opens the text versi
 export const WORLD_ACTIONS_CASES = [
   {
     id: 'world.stations.order',
-    source: 'prototype',
-    reference: 'docs/prototype/index.html:361–371 (STATIONS)',
+    source: 'owner-2026-10-08',
+    reference: 'owner-approved copy v2 (copy-v2-en.md), sections 1-9 order',
     expected:
-      'STATION_IDS in order: home-base, llm-product, marketplace-chat, admin-app, ai-engineering, systems, flight-log, this-world, contact',
+      'STATION_IDS in order: home-base, full-cycle, frontend, backend, ai, deploy, systems, this-world, contact',
   },
   {
     id: 'world.stations.count',
@@ -29,7 +29,7 @@ export const WORLD_ACTIONS_CASES = [
     id: 'world.stations.index',
     source: 'prototype',
     reference: 'docs/prototype/index.html:361–371 (array position is the station index)',
-    expected: 'stationIndex returns 0 for home-base, 5 for systems, 8 for contact',
+    expected: 'stationIndex returns 0 for home-base, 6 for systems, 8 for contact',
   },
   {
     id: 'world.stations.at',

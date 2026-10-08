@@ -1,4 +1,5 @@
-export type NumberSource = 'facts' | 'spec' | 'security-md' | 'owner-2026-10-07';
+export type NumberSource =
+  'facts' | 'spec' | 'security-md' | 'owner-2026-10-07' | 'owner-2026-10-08';
 
 export type AllowedNumber = Readonly<{
   phrase: string;
@@ -8,34 +9,17 @@ export type AllowedNumber = Readonly<{
 
 const CV = '~/Projects/learning/resume/build_ats.py';
 const SPEC = 'docs/spec/portfolio-spec.md';
-const MEMORY = 'memory career-facts-verified';
+
+const COPY_V2 = 'owner-approved copy v2 (2026-10-08)';
 
 export const ALLOWED_NUMBERS: readonly AllowedNumber[] = [
   { phrase: '7+', source: 'facts', reference: `${CV}:16 (7+ years of production experience)` },
-  { phrase: '2+', source: 'facts', reference: `${CV}:16 (2+ years as a Tech Lead)` },
-  { phrase: '46', source: 'facts', reference: `${CV}:69 (46 pages)` },
-  { phrase: '19', source: 'facts', reference: `${CV}:69 (19 business domains)` },
+  { phrase: '20+', source: 'owner-2026-10-08', reference: `${COPY_V2}: 20+ projects` },
+  { phrase: '600+', source: 'owner-2026-10-08', reference: `${COPY_V2}: 600+ translation keys` },
+  { phrase: '100', source: 'owner-2026-10-08', reference: `${COPY_V2}: Lighthouse score 100` },
   { phrase: 'AWS S3', source: 'facts', reference: `${CV}:23 (AWS (S3))` },
-  { phrase: 'Vue 2', source: 'facts', reference: `${CV}:39 (Vue 2 and Vuex)` },
   { phrase: 'Vue 3', source: 'facts', reference: `${CV}:21 (Vue 3)` },
   { phrase: 'Nuxt 3', source: 'facts', reference: `${CV}:68 (Nuxt 3)` },
-  { phrase: 'Tailwind 4', source: 'facts', reference: `${CV}:69 (Tailwind CSS 4)` },
-  {
-    phrase: '2 client projects',
-    source: 'facts',
-    reference: `${CV}:45 and :52 (2 client projects)`,
-  },
-  { phrase: '2 yrs', source: 'facts', reference: `${MEMORY} (Node.js commercially 2 years)` },
-  { phrase: '2024–26', source: 'facts', reference: `${CV}:28 (January 2024 to September 2026)` },
-  { phrase: '2022–24', source: 'facts', reference: `${CV}:37 (May 2022 to January 2024)` },
-  { phrase: '2021–22', source: 'facts', reference: `${CV}:43 (October 2021 to May 2022)` },
-  { phrase: '2020–21', source: 'facts', reference: `${CV}:49 (June 2020 to October 2021)` },
-  { phrase: '2018–20', source: 'facts', reference: `${CV}:55 (October 2018 to June 2020)` },
-  { phrase: '2015–18', source: 'facts', reference: `${CV}:61 (2015 to 2018)` },
-  { phrase: 'in 2018', source: 'facts', reference: `${CV}:61 (left the police in 2018)` },
-  { phrase: 'Mission 1 of 3', source: 'spec', reference: `${SPEC}:58` },
-  { phrase: 'Mission 2 of 3', source: 'spec', reference: `${SPEC}:59` },
-  { phrase: 'Mission 3 of 3', source: 'spec', reference: `${SPEC}:60` },
   {
     phrase: '1 + AI',
     source: 'owner-2026-10-07',

@@ -1,5 +1,5 @@
 export type HandleContactCaseSource =
-  'security-md' | 'spec' | 'owner-2026-10-07' | 'cloudflare-docs';
+  'security-md' | 'spec' | 'owner-2026-10-07' | 'owner-2026-10-08' | 'cloudflare-docs';
 
 export type HandleContactCase = Readonly<{
   id: string;
@@ -16,6 +16,9 @@ const SILENT =
 
 const TURNSTILE =
   'owner decision 2026-10-07 (Turnstile, closes Q-5): limiter → honeypot/fill-time → Turnstile → zod → one mail call; a failed check is VERIFICATION_FAILED with no mail';
+
+const AR_REF =
+  'owner 2026-10-08: confirmation email; rules/security.md §1 «Mail» (auto-reply only on the real success path)';
 
 const SITEVERIFY =
   'cloudflare-docs https://developers.cloudflare.com/turnstile/get-started/server-side-validation/ (the widget posts the token as cf-turnstile-response; validate it server-side with remoteip)';
@@ -130,6 +133,41 @@ export const HANDLE_CONTACT_CASES = [
     reference: `${TURNSTILE}; supersedes spec FR-050 (no-JS send) for the form, the direct email stays`,
     expected:
       'a valid plain POST without cf-turnstile-response gives VERIFICATION_FAILED and nothing is sent',
+  },
+  {
+    id: 'sec.contact.autoreply-sent',
+    source: 'owner-2026-10-08',
+    reference: `${AR_REF}`,
+    expected:
+      'a valid submission calls the auto-reply once, after the owner mail, with the validated visitor address only, and the state is { status: sent }',
+  },
+  {
+    id: 'sec.contact.autoreply-no-visitor-text',
+    source: 'owner-2026-10-08',
+    reference: `${AR_REF} «NO visitor-provided text»`,
+    expected:
+      'with a hostile name and message the auto-reply receives exactly one argument, the email address string',
+  },
+  {
+    id: 'sec.contact.autoreply-skipped',
+    source: 'owner-2026-10-08',
+    reference: `${AR_REF} «honeypot/fast-fill bots get the silent success and NO auto-reply»`,
+    expected:
+      'honeypot, fast fill, empty bucket, failed verification, invalid input and a failed owner mail never call the auto-reply',
+  },
+  {
+    id: 'sec.contact.autoreply-deferred',
+    source: 'owner-2026-10-08',
+    reference:
+      'owner 2026-10-08 review: a slow SMTP must not delay «sent»; the auto-reply runs after the response',
+    expected:
+      'handleContact returns { status: sent } while the auto-reply has not started; it runs once when the deferred task is executed',
+  },
+  {
+    id: 'sec.contact.autoreply-failed',
+    source: 'owner-2026-10-08',
+    reference: `${AR_REF} «If the auto-reply fails, the result to the visitor is still sent»`,
+    expected: 'a failing auto-reply still gives { status: sent }',
   },
 ] as const satisfies readonly HandleContactCase[];
 

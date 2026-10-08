@@ -4,7 +4,14 @@ import { expect, test } from '@playwright/test';
 
 import { CASES } from '@tests/front/e2e/seo.cases';
 
-const ALLOWED_SOURCES: readonly string[] = ['spec', 'wcag', 'playwright-docs', 'owner-2026-10-07'];
+const ALLOWED_SOURCES: readonly string[] = [
+  'spec',
+  'wcag',
+  'playwright-docs',
+  'security-md',
+  'owner-2026-10-07',
+  'owner-2026-10-08',
+];
 
 test('every case id has exactly one test and every test id exists', () => {
   const source: string = readFileSync('tests/front/e2e/seo.spec.ts', 'utf8');

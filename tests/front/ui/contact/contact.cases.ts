@@ -1,5 +1,11 @@
 export type ContactCaseSource =
-  'spec' | 'prototype' | 'wcag' | 'security-md' | 'owner-2026-10-07' | 'cloudflare-docs';
+  | 'spec'
+  | 'prototype'
+  | 'wcag'
+  | 'security-md'
+  | 'owner-2026-10-07'
+  | 'owner-2026-10-08'
+  | 'cloudflare-docs';
 
 export type ContactCase = Readonly<{
   id: string;
@@ -184,6 +190,46 @@ export const CONTACT_CASES = [
     reference: `${EXPLICIT_RENDER}; ${TURNSTILE}`,
     expected:
       'the widget renders once into a container inside the form with the site key, action contact, appearance interaction-only and response-field false',
+  },
+  {
+    id: 'contact-form.success-panel',
+    source: 'owner-2026-10-08',
+    reference: 'owner 2026-10-08: "there must be a visible notification that it was sent"; FR-047',
+    expected:
+      'after a sent result the success panel with the heading «Message sent» and the line «Thanks. The reply comes to the email you entered.» is visible, the form is hidden and the live region still reads the sent status',
+  },
+  {
+    id: 'contact-form.success-focus',
+    source: 'wcag',
+    reference:
+      'WCAG 2.4.3 Focus Order, 4.1.3 Status Messages (focus follows the change of content)',
+    expected: 'after a sent result the success heading is focusable with tabindex -1 and has focus',
+  },
+  {
+    id: 'contact-form.send-another',
+    source: 'owner-2026-10-08',
+    reference: 'owner 2026-10-08 task: «Send another message» brings the empty form back',
+    expected:
+      'the Send another message link hides the panel without navigating, shows the form with empty fields and puts focus on Name',
+  },
+  {
+    id: 'contact-form.send-another-link',
+    source: 'owner-2026-10-08',
+    reference: 'owner 2026-10-08 review: «Send another message» must work without JavaScript',
+    expected: 'Send another message is a link to /#contact, so a plain GET reloads the empty form',
+  },
+  {
+    id: 'contact-form.error-status-tone',
+    source: 'owner-2026-10-08',
+    reference: 'owner 2026-10-08 task: error status is visibly an error (alert colour, not muted)',
+    expected:
+      'a failed send gives the status line the status-error class; an idle status does not have it',
+  },
+  {
+    id: 'contact-form.error-status-tone-client',
+    source: 'owner-2026-10-08',
+    reference: 'owner 2026-10-08 task: error status is visibly an error (alert colour, not muted)',
+    expected: 'a client-invalid submit gives the status line the status-error class',
   },
   {
     id: 'contact-form.turnstile-token',

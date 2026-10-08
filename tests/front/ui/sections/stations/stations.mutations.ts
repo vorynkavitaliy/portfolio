@@ -12,7 +12,6 @@ export type StationsMutation = Readonly<{
 const HOME = 'src/sections/home-base/home-base.component.tsx';
 const BRIEF = 'src/sections/mission-brief/mission-brief.component.tsx';
 const SYSTEMS = 'src/sections/systems/systems.component.tsx';
-const LOG = 'src/sections/flight-log/flight-log.component.tsx';
 
 export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
   {
@@ -38,39 +37,20 @@ export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
     caseIds: ['stations.home-base.contact'],
   },
   {
-    id: 'home-cv-not-download',
+    id: 'home-cv-button-back',
     file: HOME,
-    find: '              download\n',
-    replace: '',
-    caseIds: ['stations.home-base.cv-link'],
+    find: '        <div data-motion="item">\n          <TrackedLink',
+    replace:
+      '        <div data-motion="item">\n          <button type="button">Download CV</button>\n        </div>\n\n        <div data-motion="item">\n          <TrackedLink',
+    caseIds: ['stations.home-base.no-cv'],
   },
   {
-    id: 'home-cv-event',
+    id: 'home-download-link-back',
     file: HOME,
-    find: "event={{ name: 'cv_download' }}",
-    replace: "event={{ name: 'email_copy' }}",
-    caseIds: ['stations.home-base.cv-link'],
-  },
-  {
-    id: 'home-cv-placeholder-enabled',
-    file: HOME,
-    find: '              disabled\n',
-    replace: '',
-    caseIds: ['stations.home-base.cv-placeholder'],
-  },
-  {
-    id: 'home-cv-always-link',
-    file: HOME,
-    find: 'cvHref === null ? (',
-    replace: 'false ? (',
-    caseIds: ['stations.home-base.cv-placeholder'],
-  },
-  {
-    id: 'home-cv-never-link',
-    file: HOME,
-    find: 'cvHref === null ? (',
-    replace: 'true ? (',
-    caseIds: ['stations.home-base.cv-link'],
+    find: '<TrackedLink\n            href={COPY.linkedin.href}',
+    replace:
+      '<a href="/cv.pdf" download>CV</a>\n          <TrackedLink\n            href={COPY.linkedin.href}',
+    caseIds: ['stations.home-base.no-cv'],
   },
   {
     id: 'home-linkedin-same-tab',
@@ -83,7 +63,7 @@ export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
     id: 'home-linkedin-event',
     file: HOME,
     find: "event={{ name: 'linkedin_click' }}",
-    replace: "event={{ name: 'cv_download' }}",
+    replace: "event={{ name: 'email_copy' }}",
     caseIds: ['stations.home-base.linkedin'],
   },
   {
@@ -242,20 +222,6 @@ export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
     caseIds: ['stations.systems', 'stations.server-html'],
   },
   {
-    id: 'systems-group-years-dropped',
-    file: SYSTEMS,
-    find: '{group.years === null ? null : (',
-    replace: '{true ? null : (',
-    caseIds: ['stations.systems'],
-  },
-  {
-    id: 'systems-item-years-dropped',
-    file: SYSTEMS,
-    find: '{item.years === null ? null : (',
-    replace: '{true ? null : (',
-    caseIds: ['stations.systems'],
-  },
-  {
     id: 'systems-groups-capped',
     file: SYSTEMS,
     find: '{COPY.groups.map(',
@@ -278,13 +244,6 @@ export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
     caseIds: ['stations.systems'],
   },
   {
-    id: 'systems-lede-motion',
-    file: SYSTEMS,
-    find: 'data-motion="lede"',
-    replace: '',
-    caseIds: ['stations.motion'],
-  },
-  {
     id: 'systems-chip-motion',
     file: SYSTEMS,
     find: 'data-motion="chip"',
@@ -295,70 +254,6 @@ export const STATIONS_MUTATIONS: readonly StationsMutation[] = [
     id: 'systems-item-motion',
     file: SYSTEMS,
     find: 'data-motion="item"',
-    replace: '',
-    caseIds: ['stations.motion'],
-  },
-  {
-    id: 'log-id',
-    file: LOG,
-    find: 'id="flight-log-title"',
-    replace: 'id="flight-log"',
-    caseIds: ['stations.flight-log', 'stations.heading-order'],
-  },
-  {
-    id: 'log-unordered',
-    file: LOG,
-    find: '<ol className="m-0 mt-4 grid list-none gap-3 p-0">\n        {COPY.entries.map((entry) => {\n          return (\n            <li key={entry.years} data-motion="item" className="grid log-grid gap-3">\n              <span className="pt-0.5 font-pixel text-years text-signal">{entry.years}</span>\n\n              <div>\n                <h3 className="m-0 font-pixel text-base font-medium text-white">{entry.role}</h3>\n\n                <p className="m-0 text-base text-pretty text-muted">{entry.summary}</p>\n              </div>\n            </li>\n          );\n        })}\n      </ol>',
-    replace:
-      '<ul className="m-0 mt-4 grid list-none gap-3 p-0">\n        {COPY.entries.map((entry) => {\n          return (\n            <li key={entry.years} data-motion="item" className="grid log-grid gap-3">\n              <span className="pt-0.5 font-pixel text-years text-signal">{entry.years}</span>\n\n              <div>\n                <h3 className="m-0 font-pixel text-base font-medium text-white">{entry.role}</h3>\n\n                <p className="m-0 text-base text-pretty text-muted">{entry.summary}</p>\n              </div>\n            </li>\n          );\n        })}\n      </ul>',
-    caseIds: ['stations.flight-log'],
-  },
-  {
-    id: 'log-entries-capped',
-    file: LOG,
-    find: '{COPY.entries.map(',
-    replace: '{COPY.entries.slice(0, 3).map(',
-    caseIds: ['stations.flight-log', 'stations.server-html'],
-  },
-  {
-    id: 'log-reversed',
-    file: LOG,
-    find: '{COPY.entries.map(',
-    replace: '{[...COPY.entries].reverse().map(',
-    caseIds: ['stations.flight-log'],
-  },
-  {
-    id: 'log-summary-dropped',
-    file: LOG,
-    find: '{entry.summary}',
-    replace: '',
-    caseIds: ['stations.flight-log'],
-  },
-  {
-    id: 'log-role-dropped',
-    file: LOG,
-    find: '{entry.role}',
-    replace: '',
-    caseIds: ['stations.flight-log', 'stations.server-html'],
-  },
-  {
-    id: 'log-item-motion',
-    file: LOG,
-    find: 'data-motion="item"',
-    replace: '',
-    caseIds: ['stations.motion'],
-  },
-  {
-    id: 'log-title-motion',
-    file: LOG,
-    find: 'data-motion="title"',
-    replace: '',
-    caseIds: ['stations.motion'],
-  },
-  {
-    id: 'log-tag-motion',
-    file: LOG,
-    find: 'data-motion="tag"',
     replace: '',
     caseIds: ['stations.motion'],
   },

@@ -4,10 +4,8 @@ import type { ReactNode } from 'react';
 
 import { STATIONS_COPY } from '@/content/stations.content';
 import { WORLD_COPY } from '@/content/world.content';
-import { getCvHref } from '@/core/config/cv-url';
 import { STATION_IDS, type StationId } from '@/core/world/stations';
 import { Contact } from '@/sections/contact/contact.component';
-import { FlightLog } from '@/sections/flight-log/flight-log.component';
 import { HomeBase } from '@/sections/home-base/home-base.component';
 import { MissionBrief } from '@/sections/mission-brief/mission-brief.component';
 import { Systems } from '@/sections/systems/systems.component';
@@ -26,20 +24,19 @@ const STATION_LABELS: readonly string[] = STATION_IDS.map((id) => {
   return STATIONS_COPY[id].label;
 });
 
-const renderStation = (station: StationId, cvHref: string | null): ReactNode => {
+const renderStation = (station: StationId): ReactNode => {
   switch (station) {
     case 'home-base':
-      return <HomeBase cvHref={cvHref} />;
+      return <HomeBase />;
     case 'systems':
       return <Systems />;
-    case 'flight-log':
-      return <FlightLog />;
     case 'contact':
       return <Contact />;
-    case 'llm-product':
-    case 'marketplace-chat':
-    case 'admin-app':
-    case 'ai-engineering':
+    case 'full-cycle':
+    case 'frontend':
+    case 'backend':
+    case 'ai':
+    case 'deploy':
     case 'this-world':
       return <MissionBrief station={station} />;
   }
@@ -47,8 +44,6 @@ const renderStation = (station: StationId, cvHref: string | null): ReactNode => 
 
 export default async function HomePage() {
   await connection();
-
-  const cvHref: string | null = getCvHref();
 
   return (
     <WorldShell
@@ -60,7 +55,7 @@ export default async function HomePage() {
       {STATION_IDS.map((station) => {
         return (
           <StationFrame key={station} station={station} takeOff={TAKE_OFF}>
-            {renderStation(station, cvHref)}
+            {renderStation(station)}
           </StationFrame>
         );
       })}

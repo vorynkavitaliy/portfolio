@@ -39,11 +39,11 @@ test('autopilot.menu: opens with 9 items, first focused; choosing flies, closes 
 
   const startedAt: number = Date.now();
 
-  await menu.getByRole('menuitem', { name: /LLM product/ }).click();
+  await menu.getByRole('menuitem', { name: /Full cycle/ }).click();
   await expect(menu).toBeHidden();
   await expect(trigger).toBeFocused();
   await expectUndocked(page);
-  await waitDocked(page, 'llm-product', AUTOPILOT_DOCK_MS);
+  await waitDocked(page, 'full-cycle', AUTOPILOT_DOCK_MS);
 
   test
     .info()
@@ -90,14 +90,14 @@ test('autopilot.docks: three further docks give Linked 4/9, a re-dock keeps the 
 }) => {
   await bootToHome(page);
 
-  await autopilotCell(page, 'llm-product');
-  await autopilotCell(page, 'marketplace-chat');
-  await autopilotCell(page, 'admin-app');
+  await autopilotCell(page, 'full-cycle');
+  await autopilotCell(page, 'frontend');
+  await autopilotCell(page, 'backend');
   await expect(linked(page, 4)).toBeVisible();
 
-  await autopilotCell(page, 'llm-product');
+  await autopilotCell(page, 'full-cycle');
   await expect(linked(page, 4)).toBeVisible();
-  await expect(announcer(page)).toHaveText('Docked at LLM product.');
+  await expect(announcer(page)).toHaveText('Docked at Full cycle.');
 });
 
 type MapMarker = { x: number; y: number; lit: boolean };

@@ -97,11 +97,11 @@ test('hud.keyboard-walk: the whole HUD is reachable and operable by keyboard onl
   await expect(menu).toBeHidden();
   await expect(autopilot).toBeFocused();
 
-  await expect(station(page, 'llm-product')).toHaveAttribute('data-docked', /.*/, {
+  await expect(station(page, 'full-cycle')).toHaveAttribute('data-docked', /.*/, {
     timeout: 90_000,
   });
 
-  await expect(announcer(page)).toHaveText('Docked at LLM product.');
+  await expect(announcer(page)).toHaveText('Docked at Full cycle.');
 
   await page.keyboard.press('Tab');
   await expect(headerButton(page, /^Road map$/)).toBeFocused();

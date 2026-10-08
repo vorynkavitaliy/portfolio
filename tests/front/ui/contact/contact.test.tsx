@@ -389,12 +389,118 @@ caseTest('contact-form.resets-on-sent', 'fields empty after sent', async () => {
 
   await expect
     .poll(() => {
-      return form.name.element();
+      return fieldValue('f-name');
     })
-    .toHaveProperty('value', '');
+    .toBe('');
 
-  expect(form.email.element()).toHaveProperty('value', '');
-  expect(form.message.element()).toHaveProperty('value', '');
+  expect(fieldValue('f-email')).toBe('');
+  expect(fieldValue('f-message')).toBe('');
+});
+
+const fieldValue = (id: string): string => {
+  const element: HTMLElement | null = document.getElementById(id);
+
+  return element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement
+    ? element.value
+    : 'missing';
+};
+
+const sendValid = async () => {
+  const form = await mountForm(answering({ status: 'sent' }));
+
+  await fillValid(form);
+  await form.submit.click();
+
+  return form;
+};
+
+caseTest('contact-form.success-panel', 'panel visible, form hidden, live region kept', async () => {
+  const form = await sendValid();
+  const panel = form.screen.getByRole('heading', { name: 'Message sent', exact: true });
+
+  await expect.element(panel).toBeVisible();
+
+  await expect
+    .element(form.screen.getByText('Thanks. The reply comes to the email you entered.'))
+    .toBeVisible();
+
+  await expect.element(form.submit).not.toBeInTheDocument();
+  expect(document.querySelector('[data-contact-form]')).toHaveProperty('hidden', true);
+  await expect.element(form.status).toHaveTextContent('Message sent. A reply comes by email.');
+});
+
+caseTest('contact-form.success-focus', 'focus on the heading', async () => {
+  const form = await sendValid();
+  const heading = form.screen.getByRole('heading', { name: 'Message sent', exact: true });
+
+  await expect.element(heading).toHaveAttribute('tabindex', '-1');
+
+  await expect
+    .poll(() => {
+      return document.activeElement === heading.element();
+    })
+    .toBe(true);
+});
+
+caseTest('contact-form.send-another-link', 'a plain link to the contact section', async () => {
+  const form = await sendValid();
+
+  await expect
+    .element(form.screen.getByRole('link', { name: 'Send another message', exact: true }))
+    .toHaveAttribute('href', '/#contact');
+});
+
+caseTest('contact-form.send-another', 'empty form back, focus on Name', async () => {
+  const form = await sendValid();
+  const link = form.screen.getByRole('link', { name: 'Send another message', exact: true });
+
+  const prevented: boolean[] = [];
+
+  const record = (event: Event): void => {
+    prevented.push(event.defaultPrevented);
+    event.preventDefault();
+  };
+
+  document.addEventListener('click', record);
+
+  await link.click();
+
+  document.removeEventListener('click', record);
+
+  expect(prevented).toEqual([true]);
+
+  await expect
+    .element(form.screen.getByRole('heading', { name: 'Message sent' }))
+    .not.toBeInTheDocument();
+
+  await expect.element(form.name).toBeVisible();
+  expect(fieldValue('f-name')).toBe('');
+  expect(fieldValue('f-message')).toBe('');
+
+  await expect
+    .poll(() => {
+      return document.activeElement === form.name.element();
+    })
+    .toBe(true);
+});
+
+caseTest('contact-form.error-status-tone', 'error class only on errors', async () => {
+  const failing = await mountForm(
+    answering({ status: 'error', code: 'SEND_FAILED', fieldErrors: null }),
+  );
+
+  await expect.element(failing.status).not.toHaveClass('status-error');
+
+  await fillValid(failing);
+  await failing.submit.click();
+  await expect.element(failing.status).toHaveClass('status-error');
+});
+
+caseTest('contact-form.error-status-tone-client', 'client-invalid is an error too', async () => {
+  const form = await mountForm(answering({ status: 'idle' }));
+
+  await form.submit.click();
+  await expect.element(form.status).toHaveClass('status-error');
 });
 
 caseTest('contact-form.status-live', 'status region present and empty', async () => {

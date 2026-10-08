@@ -31,6 +31,7 @@ const VALID_FIELDS: Readonly<Record<string, string>> = {
 type Harness = {
   deps: ContactDeps;
   outbox: ContactMessage[];
+  replies: string[][];
   checks: TurnstileRequest[];
   takeToken: ReturnType<typeof vi.fn<(ip: string) => boolean>>;
 };
@@ -49,13 +50,16 @@ const harness = (
   allow: (ip: string) => boolean,
   result: MailResult = { ok: true },
   verdict: TurnstileResult = { ok: true },
+  replyResult: MailResult = { ok: true },
 ): Harness => {
   const outbox: ContactMessage[] = [];
+  const replies: string[][] = [];
   const checks: TurnstileRequest[] = [];
   const takeToken = vi.fn(allow);
 
   return {
     outbox,
+    replies,
     checks,
     takeToken,
     deps: {
@@ -71,6 +75,14 @@ const harness = (
         outbox.push(message);
 
         return result;
+      },
+      defer: (task: () => Promise<unknown>) => {
+        void task();
+      },
+      autoReply: async (...args: string[]) => {
+        replies.push(args);
+
+        return replyResult;
       },
     },
   };
@@ -229,6 +241,17 @@ caseTest(
       });
     });
 
+    let deferredTasks = 0;
+
+    vi.doMock('next/server', () => {
+      return {
+        after: (task: () => Promise<unknown>) => {
+          deferredTasks += 1;
+          void task();
+        },
+      };
+    });
+
     vi.doMock('next/headers', () => {
       return {
         headers: async () => {
@@ -264,7 +287,21 @@ caseTest(
     }
 
     expect(statuses).toEqual(['sent', 'sent', 'sent', 'RATE_LIMITED']);
-    expect(sent).toHaveLength(3);
+    expect(sent).toHaveLength(6);
+
+    expect(
+      sent.map((mail) => {
+        return mail.to;
+      }),
+    ).toEqual([
+      'owner@test.invalid',
+      'ann@example.test',
+      'owner@test.invalid',
+      'ann@example.test',
+      'owner@test.invalid',
+      'ann@example.test',
+    ]);
+
     expect(sent[0]?.replyTo).toBe('ann@example.test');
     expect(verifyBodies).toHaveLength(3);
 
@@ -280,7 +317,7 @@ caseTest(
       status: 'sent',
     });
 
-    expect(sent).toHaveLength(4);
+    expect(sent).toHaveLength(8);
 
     clientIp = '198.51.100.22';
     captchaPasses = false;
@@ -291,10 +328,12 @@ caseTest(
       fieldErrors: null,
     });
 
-    expect(sent).toHaveLength(4);
+    expect(sent).toHaveLength(8);
+    expect(deferredTasks).toBe(4);
 
     vi.unstubAllGlobals();
     vi.doUnmock('next/headers');
+    vi.doUnmock('next/server');
     vi.doUnmock('nodemailer');
   },
 );
@@ -372,4 +411,129 @@ caseTest('sec.contact.no-js-no-token', 'a plain POST without a token sends nothi
 
   expect(await handleContact(bare, deps)).toEqual(VERIFICATION_FAILED);
   expect(outbox).toEqual([]);
+});
+
+caseTest('sec.contact.autoreply-sent', 'once, after the owner mail, to the visitor', async () => {
+  const { deps, outbox, replies } = harness(always);
+  const order: string[] = [];
+
+  const send = deps.send;
+  const autoReply = deps.autoReply;
+
+  expect(
+    await handleContact(formOf(), {
+      ...deps,
+      send: async (message) => {
+        order.push('owner');
+
+        return send(message);
+      },
+      autoReply: async (email) => {
+        order.push('reply');
+
+        return autoReply(email);
+      },
+    }),
+  ).toEqual({ status: 'sent' });
+
+  expect(order).toEqual(['owner', 'reply']);
+  expect(outbox).toHaveLength(1);
+  expect(replies).toEqual([['ann@example.test']]);
+});
+
+caseTest('sec.contact.autoreply-no-visitor-text', 'only the address is passed on', async () => {
+  const { deps, replies } = harness(always);
+
+  await handleContact(
+    formOf({
+      name: 'Buy pills at evil.test',
+      message: 'Cheap pills at http://evil.test/buy now, please click',
+    }),
+    deps,
+  );
+
+  expect(replies).toEqual([['ann@example.test']]);
+});
+
+caseTest(
+  'sec.contact.autoreply-skipped',
+  'only a real, delivered message is answered',
+  async () => {
+    const cases: readonly Readonly<{
+      fields: Readonly<Record<string, string>>;
+      allow: boolean;
+      result: MailResult;
+      verdict: TurnstileResult;
+    }>[] = [
+      {
+        fields: { website: 'https://spam.test' },
+        allow: true,
+        result: { ok: true },
+        verdict: { ok: true },
+      },
+      {
+        fields: { startedAt: String(NOW - 1000) },
+        allow: true,
+        result: { ok: true },
+        verdict: { ok: true },
+      },
+      { fields: {}, allow: false, result: { ok: true }, verdict: { ok: true } },
+      { fields: {}, allow: true, result: { ok: true }, verdict: { ok: false, code: 'rejected' } },
+      { fields: { email: 'nope' }, allow: true, result: { ok: true }, verdict: { ok: true } },
+      {
+        fields: {},
+        allow: true,
+        result: { ok: false, code: 'SEND_FAILED' },
+        verdict: { ok: true },
+      },
+    ];
+
+    for (const entry of cases) {
+      const { deps, replies } = harness(
+        () => {
+          return entry.allow;
+        },
+        entry.result,
+        entry.verdict,
+      );
+
+      await handleContact(formOf(entry.fields), deps);
+
+      expect(replies).toEqual([]);
+    }
+  },
+);
+
+caseTest('sec.contact.autoreply-deferred', 'sent without waiting for the auto-reply', async () => {
+  const { deps, replies } = harness(always);
+  const tasks: Array<() => Promise<unknown>> = [];
+
+  expect(
+    await handleContact(formOf(), {
+      ...deps,
+      defer: (task) => {
+        tasks.push(task);
+      },
+    }),
+  ).toEqual({ status: 'sent' });
+
+  expect(replies).toEqual([]);
+  expect(tasks).toHaveLength(1);
+
+  await tasks[0]?.();
+
+  expect(replies).toEqual([['ann@example.test']]);
+});
+
+caseTest('sec.contact.autoreply-failed', 'the visitor still sees sent', async () => {
+  const { deps, outbox, replies } = harness(
+    always,
+    { ok: true },
+    { ok: true },
+    { ok: false, code: 'SEND_FAILED' },
+  );
+
+  expect(await handleContact(formOf(), deps)).toEqual({ status: 'sent' });
+  expect(outbox).toHaveLength(1);
+  expect(replies).toHaveLength(1);
 });

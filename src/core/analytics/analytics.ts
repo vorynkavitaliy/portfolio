@@ -5,7 +5,6 @@ export const ANALYTICS_EVENT = 'portfolio:analytics';
 export type TextVersionSource = 'toggle' | 'loader' | 'deep-link' | 'fallback' | 'low-end';
 
 export type AnalyticsEvent =
-  | { name: 'cv_download' }
   | { name: 'contact_sent' }
   | { name: 'linkedin_click' }
   | { name: 'email_copy' }

@@ -7,7 +7,7 @@ import { TURNSTILE_ACTION, TURNSTILE_FIELD } from '@/sections/contact/contact.ty
 
 import type { RawContactForm } from '@/sections/contact/contact.schema';
 import type { ContactFormState } from '@/sections/contact/contact.types';
-import type { ContactMessage, MailResult } from '@/server/mail/mail.types';
+import type { AutoReplier, ContactMessage, MailResult } from '@/server/mail/mail.types';
 import type { TurnstileResult, TurnstileVerifier } from '@/server/turnstile/turnstile.types';
 
 export type ContactDeps = Readonly<{
@@ -16,6 +16,8 @@ export type ContactDeps = Readonly<{
   takeToken: (ip: string) => boolean;
   verify: TurnstileVerifier;
   send: (message: ContactMessage) => Promise<MailResult>;
+  autoReply: AutoReplier;
+  defer: (task: () => Promise<unknown>) => void;
 }>;
 
 const turnstileToken = (formData: FormData): string => {
@@ -57,7 +59,13 @@ export const handleContact = async (
   const { name, email, message } = parsed.data;
   const result: MailResult = await deps.send({ name, email, message });
 
-  return result.ok
-    ? { status: 'sent' }
-    : { status: 'error', code: 'SEND_FAILED', fieldErrors: null };
+  if (!result.ok) {
+    return { status: 'error', code: 'SEND_FAILED', fieldErrors: null };
+  }
+
+  deps.defer(() => {
+    return deps.autoReply(email);
+  });
+
+  return { status: 'sent' };
 };

@@ -44,15 +44,14 @@ caseTest('analytics.detail', 'detail is the payload', () => {
   expect(detailOf(received[0])).toEqual({ name: 'station_docked', station: 'systems' });
 });
 
-caseTest('analytics.fr-053', 'the four conversion events carry only a name', () => {
-  const names = ['cv_download', 'contact_sent', 'linkedin_click', 'email_copy'] as const;
+caseTest('analytics.fr-053', 'the three conversion events carry only a name', () => {
+  const names = ['contact_sent', 'linkedin_click', 'email_copy'] as const;
 
   for (const name of names) {
     track({ name });
   }
 
   expect(received.map(detailOf)).toEqual([
-    { name: 'cv_download' },
     { name: 'contact_sent' },
     { name: 'linkedin_click' },
     { name: 'email_copy' },

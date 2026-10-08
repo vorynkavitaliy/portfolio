@@ -63,7 +63,7 @@ test('world.sound: on and pressed after Take off, off via the toggle', async ({ 
   await expect(off).toHaveAttribute('aria-pressed', 'false');
 });
 
-test('world.fly-keys: keys only to LLM product docks, Linked 2/9', async ({ page }) => {
+test('world.fly-keys: keys only to Full cycle docks, Linked 2/9', async ({ page }) => {
   await bootToHome(page);
 
   await page.keyboard.press('Space');
@@ -71,16 +71,16 @@ test('world.fly-keys: keys only to LLM product docks, Linked 2/9', async ({ page
 
   const startedAt: number = Date.now();
 
-  await flyTo(page, 'llm-product');
-  await waitDocked(page, 'llm-product');
+  await flyTo(page, 'full-cycle');
+  await waitDocked(page, 'full-cycle');
 
   test
     .info()
-    .annotations.push({ type: 'fly-llm-product-ms', description: String(Date.now() - startedAt) });
+    .annotations.push({ type: 'fly-full-cycle-ms', description: String(Date.now() - startedAt) });
 
   await expect(linked(page, 2)).toBeVisible();
-  await expect(announcer(page)).toHaveText('Docked at LLM product.');
-  await expect(barCell(page, 'llm-product')).toHaveAttribute('aria-current', 'true');
+  await expect(announcer(page)).toHaveText('Docked at Full cycle.');
+  await expect(barCell(page, 'full-cycle')).toHaveAttribute('aria-current', 'true');
 });
 
 test('world.take-off-paths: Space, Esc and the panel button each undock and bring the hint back', async ({
@@ -162,7 +162,7 @@ test('world.text-roundtrip: text and back keeps the docked station and the count
   page,
 }) => {
   await bootToHome(page);
-  await autopilotCell(page, 'marketplace-chat');
+  await autopilotCell(page, 'frontend');
   await expect(linked(page, 2)).toBeVisible();
 
   await headerButton(page, /^Text version$/).click();
@@ -170,7 +170,7 @@ test('world.text-roundtrip: text and back keeps the docked station and the count
 
   await headerButton(page, /^3D world$/).click();
 
-  await expect(station(page, 'marketplace-chat')).toHaveAttribute('data-docked', /.*/);
+  await expect(station(page, 'frontend')).toHaveAttribute('data-docked', /.*/);
   await expect(linked(page, 2)).toBeVisible();
 });
 

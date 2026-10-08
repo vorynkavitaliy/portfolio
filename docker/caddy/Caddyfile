@@ -19,19 +19,12 @@
 	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
 }
 
-www.{$SITE_DOMAIN} {
-	import origin_tls
-	redir https://{$SITE_DOMAIN}{uri} permanent
-}
-
-{$SITE_DOMAIN} {
-	import origin_tls
-
+(proxy) {
 	request_body {
 		max_size 32KB
 	}
 
-	reverse_proxy {$UPSTREAM:127.0.0.1:3000} {
+	reverse_proxy {args[0]} {
 		header_up X-Real-IP {client_ip}
 		header_up -CF-Connecting-IP
 		transport http {
@@ -44,4 +37,20 @@ www.{$SITE_DOMAIN} {
 		output stdout
 		format json
 	}
+}
+
+www.{$PROD_DOMAIN} {
+	import origin_tls
+	redir https://{$PROD_DOMAIN}{uri} permanent
+}
+
+{$PROD_DOMAIN} {
+	import origin_tls
+	import proxy 127.0.0.1:3000
+}
+
+{$DEV_DOMAIN} {
+	import origin_tls
+	header X-Robots-Tag "noindex, nofollow"
+	import proxy 127.0.0.1:3001
 }

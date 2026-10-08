@@ -7,7 +7,7 @@ export type AnalyticsCase = Readonly<{
   expected: string;
 }>;
 
-const FR_053 = 'FR-053 (CV download, contact send, LinkedIn and email clicks)';
+const FR_053 = 'FR-053 (contact send, LinkedIn and email clicks)';
 
 const FR_054 = 'FR-054 (Take off, station docked with its id, text version opened)';
 
@@ -36,7 +36,7 @@ export const ANALYTICS_CASES = [
     source: 'spec',
     reference: FR_053,
     expected:
-      'cv_download, contact_sent, linkedin_click and email_copy each arrive with exactly that name and no other field',
+      'contact_sent, linkedin_click and email_copy each arrive with exactly that name and no other field',
   },
   {
     id: 'analytics.fr-054.station',

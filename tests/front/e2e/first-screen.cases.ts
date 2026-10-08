@@ -1,5 +1,5 @@
 export type FirstScreenCaseSource =
-  'security-md' | 'spec' | 'wcag' | 'playwright-docs' | 'owner-2026-10-07';
+  'security-md' | 'spec' | 'wcag' | 'playwright-docs' | 'owner-2026-10-07' | 'owner-2026-10-08';
 
 export type FirstScreenCase = Readonly<{
   id: string;

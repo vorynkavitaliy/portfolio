@@ -34,7 +34,6 @@ export const TRACKED_LINK_MUTATIONS: readonly TrackedLinkMutation[] = [
     caseIds: [
       'tracked-link.click-once',
       'tracked-link.two-clicks',
-      'tracked-link.cv',
       'tracked-link.linkedin',
       'tracked-link.email',
     ],
@@ -59,20 +58,6 @@ export const TRACKED_LINK_MUTATIONS: readonly TrackedLinkMutation[] = [
     find: '  return (\n    <a',
     replace: '  track(event);\n\n  return (\n    <a',
     caseIds: ['tracked-link.no-click-no-event'],
-  },
-  {
-    id: 'download-always',
-    file: FILE,
-    find: "download={download === true ? '' : undefined}",
-    replace: "download=''",
-    caseIds: ['tracked-link.renders'],
-  },
-  {
-    id: 'download-dropped',
-    file: FILE,
-    find: "download={download === true ? '' : undefined}",
-    replace: 'download={undefined}',
-    caseIds: ['tracked-link.cv'],
   },
   {
     id: 'target-always',

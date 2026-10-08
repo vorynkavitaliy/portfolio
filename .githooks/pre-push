@@ -11,8 +11,8 @@ run_step() {
   fi
 }
 
-run_step verify npm run verify
 run_step test:ui npm run test:ui
 seed="$(date +%s)"
 echo "pre-push: test:server seed $seed"
 run_step test:server npm run test:server -- --sequence.shuffle --sequence.seed="$seed"
+run_step test:smoke npm run test:smoke

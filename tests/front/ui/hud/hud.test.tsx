@@ -309,7 +309,7 @@ caseTest('hud.bar.current', 'aria-current only on the docked cell', async () => 
   await renderHud();
   expect(document.querySelectorAll('[data-station-cell][aria-current]')).toHaveLength(0);
 
-  dock('ai-engineering');
+  dock('ai');
 
   await expect
     .poll(() => {
@@ -317,7 +317,7 @@ caseTest('hud.bar.current', 'aria-current only on the docked cell', async () => 
         .querySelector('[data-station-cell][aria-current="true"]')
         ?.getAttribute('data-station-cell');
     })
-    .toBe('ai-engineering');
+    .toBe('ai');
 
   expect(document.querySelectorAll('[data-station-cell][aria-current]')).toHaveLength(1);
 
@@ -362,7 +362,7 @@ caseTest('hud.menu.items', 'role menu with nine items and visited marks', async 
   expect(menuItems()).toHaveLength(9);
 
   setState((current) => {
-    return addVisited(current, 'llm-product');
+    return addVisited(current, 'full-cycle');
   });
 
   openMenu('autopilot');
@@ -446,9 +446,9 @@ caseTest('hud.menu.choose', 'choosing flies there, closes, returns focus', async
     })
     .toBe(menuItems()[0]);
 
-  await screen.getByRole('menuitem', { name: /LLM product/ }).click();
+  await screen.getByRole('menuitem', { name: /Full cycle/ }).click();
 
-  expect(commands()).toEqual([{ type: 'autopilot', station: 'llm-product' }]);
+  expect(commands()).toEqual([{ type: 'autopilot', station: 'full-cycle' }]);
   expect(state().menu).toBe('none');
 
   await expect
@@ -813,13 +813,13 @@ caseTest('hud.announcer', 'polite status announces the dock', async () => {
   expect(announcer.getAttribute('aria-live')).toBe('polite');
   expect(announcer.textContent).toBe('');
 
-  dock('flight-log');
+  dock('deploy');
 
   await expect
     .poll(() => {
       return announcer.textContent;
     })
-    .toBe('Docked at Flight log.');
+    .toBe('Docked at Deploy.');
 
   fly();
 

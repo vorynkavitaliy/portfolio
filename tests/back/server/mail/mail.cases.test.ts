@@ -9,6 +9,7 @@ const ALLOWED_SOURCES: readonly string[] = [
   'spec',
   'nodemailer-docs',
   'owner-2026-10-07',
+  'owner-2026-10-08',
 ];
 
 const TEST_FILE = 'tests/back/server/mail/mail.test.ts';

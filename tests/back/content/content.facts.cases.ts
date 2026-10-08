@@ -1,4 +1,5 @@
-export type ContentFactsCaseSource = 'spec' | 'facts' | 'owner-2026-10-07' | 'security-md';
+export type ContentFactsCaseSource =
+  'spec' | 'facts' | 'owner-2026-10-07' | 'owner-2026-10-08' | 'security-md';
 
 export type ContentFactsCase = Readonly<{
   id: string;
@@ -66,16 +67,10 @@ export const CONTENT_FACTS_CASES = [
       'no phone number from the list and no phone-shaped digit run occurs in any copy string',
   },
   {
-    id: 'content.llm-product.no-internals',
+    id: 'content.full-cycle.no-internals',
     source: 'owner-2026-10-07',
     reference: `${CONTENT_RULES} §2 (never the LLM product internals), ${SC_015}`,
-    expected: 'the llm-product copy has none of the words pipeline, minute, PDF',
-  },
-  {
-    id: 'content.missions.exactly-three',
-    source: 'spec',
-    reference: 'docs/spec/portfolio-spec.md:58-60 (Mission 1, 2, 3 of 3)',
-    expected: 'exactly 3 stations carry a «Mission n of 3» tag, n = 1, 2, 3 once each',
+    expected: 'the full-cycle copy has none of the words pipeline, minute, PDF',
   },
   {
     id: 'content.station-copy.no-pronouns',

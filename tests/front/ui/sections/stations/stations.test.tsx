@@ -4,7 +4,6 @@ import { render } from 'vitest-browser-react';
 
 import { caseTest } from '@tests/front/ui/sections/stations/stations.case-test';
 import { ANALYTICS_EVENT } from '@/core/analytics/analytics';
-import { FlightLog } from '@/sections/flight-log/flight-log.component';
 import { HomeBase } from '@/sections/home-base/home-base.component';
 import { MissionBrief } from '@/sections/mission-brief/mission-brief.component';
 import { Systems } from '@/sections/systems/systems.component';
@@ -22,71 +21,62 @@ const BRIEFS: readonly Readonly<{
   result: string;
 }>[] = [
   {
-    station: 'llm-product',
-    title: 'An LLM product from zero',
-    tag: 'Mission 1 of 3',
-    items: 4,
+    station: 'full-cycle',
+    title: 'From idea to production',
+    tag: 'Full cycle',
+    items: 5,
+    chips: 0,
+    result: 'Idea to MVP',
+  },
+  {
+    station: 'frontend',
+    title: 'Interfaces in React and Vue',
+    tag: 'Frontend · 7+ years',
+    items: 7,
+    chips: 14,
+    result: '7+ yrs',
+  },
+  {
+    station: 'backend',
+    title: 'Services on Node.js',
+    tag: 'Backend',
+    items: 6,
+    chips: 9,
+    result: 'Node.js',
+  },
+  {
+    station: 'ai',
+    title: 'AI in the product and the workflow',
+    tag: 'AI integration',
+    items: 5,
+    chips: 10,
+    result: 'Own MCP',
+  },
+  {
+    station: 'deploy',
+    title: 'Ships to production',
+    tag: 'DevOps',
+    items: 5,
     chips: 6,
-    result: 'On time',
-  },
-  {
-    station: 'marketplace-chat',
-    title: 'Chat and video player, live',
-    tag: 'Mission 2 of 3',
-    items: 3,
-    chips: 5,
-    result: 'Live',
-  },
-  {
-    station: 'admin-app',
-    title: 'An admin app with 46 pages',
-    tag: 'Mission 3 of 3',
-    items: 3,
-    chips: 5,
-    result: '46 pages',
-  },
-  {
-    station: 'ai-engineering',
-    title: 'Builds with agent workflows',
-    tag: 'AI engineering',
-    items: 4,
-    chips: 6,
-    result: 'Daily',
+    result: 'Dev + prod',
   },
   {
     station: 'this-world',
-    title: 'You are flying the proof',
-    tag: 'How this was built',
+    title: 'This site is a project too',
+    tag: 'How it was built',
     items: 3,
-    chips: 6,
+    chips: 0,
     result: '1 + AI',
   },
-];
-
-const LOG_YEARS: readonly string[] = [
-  '2024–26',
-  '2022–24',
-  '2021–22',
-  '2020–21',
-  '2018–20',
-  '2015–18',
-];
-
-const LOG_ROLES: readonly string[] = [
-  'Tech lead',
-  'Frontend engineer',
-  'Team lead',
-  'Frontend developer',
-  'Freelance developer',
-  'Public service, Ukraine',
 ];
 
 const SYSTEM_GROUPS: readonly string[] = [
   'Frontend',
   'Backend',
-  'Architecture and security',
+  'Integrations',
+  'DevOps',
   'AI',
-  'Tooling',
+  'Tools and 3D',
 ];
 
 let details: unknown[];
@@ -117,7 +107,7 @@ const texts = (selector: string): readonly string[] => {
 };
 
 caseTest('stations.home-base.heading', 'name, tag, role and lede', async () => {
-  await render(<HomeBase cvHref={null} />);
+  await render(<HomeBase />);
 
   const headings = document.querySelectorAll('h1');
 
@@ -125,48 +115,32 @@ caseTest('stations.home-base.heading', 'name, tag, role and lede', async () => {
   expect(headings[0]?.textContent).toBe('Vitalii Vorynka');
   expect(headings[0]?.id).toBe('home-base-title');
   expect(document.body.textContent).toContain('Pilot on duty');
-  expect(document.body.textContent).toContain('Full-stack dev with AI engineering');
+  expect(document.body.textContent).toContain('Full-stack Developer · AI Engineer');
 
   expect(document.body.textContent).toContain(
-    'Builds interfaces and the services behind them. Runs AI agents as part of the workflow.',
+    'Builds web products end to end: interface, backend, deploy. 7+ years in production, 20+ projects.',
   );
 });
 
 caseTest('stations.home-base.contact', 'the Contact CTA', async () => {
-  const screen = await render(<HomeBase cvHref={null} />);
+  const screen = await render(<HomeBase />);
 
   await expect
     .element(screen.getByRole('link', { name: 'Contact', exact: true }))
     .toHaveAttribute('href', '#contact');
 });
 
-caseTest('stations.home-base.cv-link', 'the CV link from the prop', async () => {
-  const screen = await render(<HomeBase cvHref="https://cv.example.test/cv.pdf" />);
-  const link = screen.getByRole('link', { name: 'Download CV', exact: true });
+caseTest('stations.home-base.no-cv', 'no CV button, no download link', async () => {
+  await render(<HomeBase />);
 
-  await expect.element(link).toHaveAttribute('href', 'https://cv.example.test/cv.pdf');
-  await expect.element(link).toHaveAttribute('download');
-
-  await link.click();
-  expect(details).toEqual([{ name: 'cv_download' }]);
-
-  await link.click();
-  expect(details).toEqual([{ name: 'cv_download' }, { name: 'cv_download' }]);
-});
-
-caseTest('stations.home-base.cv-placeholder', 'no CV address yet', async () => {
-  const screen = await render(<HomeBase cvHref={null} />);
-
-  await expect
-    .element(screen.getByRole('button', { name: 'Download CV', exact: true }))
-    .toBeDisabled();
-
+  expect(document.body.textContent).not.toMatch(/\bCV\b/i);
   expect(document.querySelectorAll('a[download]')).toHaveLength(0);
-  expect(details).toEqual([]);
+  expect(document.querySelectorAll('button')).toHaveLength(0);
+  expect(document.querySelectorAll('a')).toHaveLength(2);
 });
 
 caseTest('stations.home-base.linkedin', 'the profile link', async () => {
-  const screen = await render(<HomeBase cvHref={null} />);
+  const screen = await render(<HomeBase />);
   const link = screen.getByRole('link', { name: 'LinkedIn', exact: true });
 
   await expect.element(link).toHaveAttribute('href', LINKEDIN);
@@ -178,14 +152,11 @@ caseTest('stations.home-base.linkedin', 'the profile link', async () => {
 });
 
 caseTest('stations.home-base.facts', 'stats and chips', async () => {
-  await render(<HomeBase cvHref={null} />);
+  await render(<HomeBase />);
 
-  expect(texts('[data-motion="stat-value"]')).toEqual(['7+', '2+']);
+  expect(texts('[data-motion="stat-value"]')).toEqual(['7+', '20+']);
 
-  expect(texts('[data-motion="stat"]')).toEqual([
-    '7+years in production',
-    '2+years as a tech lead',
-  ]);
+  expect(texts('[data-motion="stat"]')).toEqual(['7+years in production', '20+projects']);
 
   expect(texts('[data-motion="chip"]')).toEqual([
     'TypeScript',
@@ -194,7 +165,9 @@ caseTest('stations.home-base.facts', 'stats and chips', async () => {
     'Vue',
     'Nuxt',
     'Node.js',
-    'Three.js',
+    'NestJS',
+    'Express',
+    'Docker',
     'Claude Code',
   ]);
 });
@@ -233,7 +206,7 @@ caseTest('stations.systems', 'groups and chips', async () => {
 
   expect(headings).toHaveLength(1);
   expect(headings[0]?.id).toBe('systems-title');
-  expect(headings[0]?.textContent).toBe('What is in the cockpit');
+  expect(headings[0]?.textContent).toBe('The working stack');
 
   const groups = [...document.querySelectorAll('h3')];
 
@@ -243,7 +216,7 @@ caseTest('stations.systems', 'groups and chips', async () => {
     }),
   ).toEqual(SYSTEM_GROUPS);
 
-  expect(groups[0]?.textContent).toBe('Frontend7+ yrs');
+  expect(groups[0]?.textContent).toBe('Frontend');
   expect(groups[1]?.textContent).toBe('Backend');
 
   const backendChips = [...(groups[1]?.nextElementSibling?.querySelectorAll('li') ?? [])].map(
@@ -253,43 +226,24 @@ caseTest('stations.systems', 'groups and chips', async () => {
   );
 
   expect(backendChips).toEqual([
-    'Node.js2 yrs',
+    'Node.js',
     'NestJS',
+    'Express',
     'REST',
+    'GraphQL',
     'WebSockets',
     'RabbitMQ',
     'Redis',
     'PostgreSQL',
+    'MongoDB',
   ]);
-});
-
-caseTest('stations.flight-log', 'six entries, newest first', async () => {
-  await render(<FlightLog />);
-
-  const headings = document.querySelectorAll('h2');
-
-  expect(headings).toHaveLength(1);
-  expect(headings[0]?.id).toBe('flight-log-title');
-  expect(headings[0]?.textContent).toBe('Routes flown so far');
-
-  expect(document.querySelectorAll('ol')).toHaveLength(1);
-  expect(texts('ol > li > span')).toEqual(LOG_YEARS);
-  expect(texts('ol h3')).toEqual(LOG_ROLES);
-
-  expect(
-    [...document.querySelectorAll('ol li p')].every((summary) => {
-      return (summary.textContent ?? '') !== '';
-    }),
-  ).toBe(true);
-
-  expect(document.querySelectorAll('ol li p')).toHaveLength(6);
 });
 
 const renderAll = async () => {
   return render(
     <>
       <section>
-        <HomeBase cvHref={null} />
+        <HomeBase />
       </section>
 
       {BRIEFS.slice(0, 4).map((brief) => {
@@ -304,13 +258,13 @@ const renderAll = async () => {
         <Systems />
       </section>
 
-      <section>
-        <FlightLog />
-      </section>
-
-      <section>
-        <MissionBrief station="this-world" />
-      </section>
+      {BRIEFS.slice(4).map((brief) => {
+        return (
+          <section key={brief.station}>
+            <MissionBrief station={brief.station} />
+          </section>
+        );
+      })}
     </>,
   );
 };
@@ -362,54 +316,51 @@ caseTest('stations.motion', 'motion targets are present', async () => {
     expect(has(section, 'item')).toBe(true);
   }
 
-  const [home, , , , , systems, log] = sections;
+  const [home, , , , , systems] = sections;
 
   expect(home && has(home, 'stat')).toBe(true);
   expect(home && has(home, 'stat-value')).toBe(true);
   expect(home && has(home, 'chip')).toBe(true);
   expect(home?.querySelectorAll('[data-motion="lede"]')).toHaveLength(2);
 
-  for (const brief of [sections[1], sections[2], sections[3], sections[4], sections[7]]) {
+  const briefSections = [
+    sections[1],
+    sections[2],
+    sections[3],
+    sections[4],
+    sections[6],
+    sections[7],
+  ];
+
+  for (const [index, brief] of briefSections.entries()) {
     expect(brief && has(brief, 'lede')).toBe(true);
-    expect(brief && has(brief, 'chip')).toBe(true);
+    expect(brief && has(brief, 'chip')).toBe((BRIEFS[index]?.chips ?? 0) > 0);
     expect(brief && has(brief, 'result')).toBe(true);
   }
 
-  expect(systems && has(systems, 'lede')).toBe(true);
+  expect(systems && has(systems, 'lede')).toBe(false);
   expect(systems && has(systems, 'chip')).toBe(true);
-  expect(log && has(log, 'chip')).toBe(false);
 });
 
 caseTest('stations.server-html', 'complete markup without client effects', () => {
   const html = renderToString(
     <>
-      <HomeBase cvHref={null} />
+      <HomeBase />
 
       {BRIEFS.map((brief) => {
         return <MissionBrief key={brief.station} station={brief.station} />;
       })}
 
       <Systems />
-
-      <FlightLog />
     </>,
   );
 
   expect(html).toContain('Vitalii Vorynka');
-  expect(html).toContain('Full-stack dev with AI engineering');
+  expect(html).toContain('Full-stack Developer · AI Engineer');
 
   for (const brief of BRIEFS) {
     expect(html).toContain(brief.title);
   }
 
-  expect(html).toContain('What is in the cockpit');
-  expect(html).toContain('Routes flown so far');
-
-  for (const role of LOG_ROLES) {
-    expect(html).toContain(role);
-  }
-
-  for (const years of LOG_YEARS) {
-    expect(html).toContain(years);
-  }
+  expect(html).toContain('The working stack');
 });

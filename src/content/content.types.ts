@@ -8,14 +8,12 @@ type StationBase<Id extends StationId> = Readonly<{
   tag: string;
   title: string;
 }>;
-export type BriefStationId =
-  'llm-product' | 'marketplace-chat' | 'admin-app' | 'ai-engineering' | 'this-world';
+export type BriefStationId = 'full-cycle' | 'frontend' | 'backend' | 'ai' | 'deploy' | 'this-world';
 export type HomeBaseCopy = StationBase<'home-base'> &
   Readonly<{
     role: string;
     lede: string;
     contactCta: string;
-    cv: Readonly<{ label: string }>;
     linkedin: LinkCopy;
     stats: readonly FigureCopy[];
     chips: readonly string[];
@@ -29,16 +27,11 @@ export type BriefCopy = StationBase<BriefStationId> &
   }>;
 export type SystemsCopy = StationBase<'systems'> &
   Readonly<{
-    lede: string;
     groups: readonly Readonly<{
       title: string;
       years: string | null;
       items: readonly Readonly<{ name: string; years: string | null }>[];
     }>[];
-  }>;
-export type FlightLogCopy = StationBase<'flight-log'> &
-  Readonly<{
-    entries: readonly Readonly<{ years: string; role: string; summary: string }>[];
   }>;
 export type ContactCopy = StationBase<'contact'> &
   Readonly<{
@@ -49,12 +42,12 @@ export type ContactCopy = StationBase<'contact'> &
   }>;
 export type StationsCopy = Readonly<{
   'home-base': HomeBaseCopy;
-  'llm-product': BriefCopy;
-  'marketplace-chat': BriefCopy;
-  'admin-app': BriefCopy;
-  'ai-engineering': BriefCopy;
+  'full-cycle': BriefCopy;
+  frontend: BriefCopy;
+  backend: BriefCopy;
+  ai: BriefCopy;
   systems: SystemsCopy;
-  'flight-log': FlightLogCopy;
+  deploy: BriefCopy;
   'this-world': BriefCopy;
   contact: ContactCopy;
 }>;
@@ -104,6 +97,7 @@ export type ContactFormCopy = Readonly<{
     emailTooLong: string;
     messageTooLong: string;
   };
+  success: { title: string; text: string; again: string };
   status: {
     invalid: string;
     sent: string;
@@ -114,7 +108,16 @@ export type ContactFormCopy = Readonly<{
 }>;
 export type SiteCopy = Readonly<{
   title: string;
+  ogTitle: string;
   description: string;
   ogAlt: string;
-  person: { name: string; jobTitle: string; sameAs: readonly string[] };
+  siteName: string;
+  keywords: readonly string[];
+  person: {
+    name: string;
+    jobTitle: string;
+    sameAs: readonly string[];
+    knowsAbout: readonly string[];
+    address: { locality: string; country: string };
+  };
 }>;

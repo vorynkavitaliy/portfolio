@@ -14,12 +14,16 @@ import { worldStore } from '@/core/world/world-store';
 import { CONTACT_LIMITS } from '@/sections/contact/contact.limits';
 import { TURNSTILE_ACTION, TURNSTILE_FIELD } from '@/sections/contact/contact.types';
 
+import type { MouseEvent } from 'react';
+
 import type { ContactFormCopy } from '@/content/content.types';
 import type {
   ContactField,
   ContactFieldErrors,
   ContactFormState,
 } from '@/sections/contact/contact.types';
+
+const SEND_ANOTHER_HREF = '/#contact';
 
 type ContactAction = (previous: ContactFormState, formData: FormData) => Promise<ContactFormState>;
 
@@ -162,6 +166,7 @@ export const ContactForm = ({ action, copy, turnstileSiteKey }: ContactFormProps
   );
 
   const [startedAt, setStartedAt] = useState<string>('');
+  const [dismissed, setDismissed] = useState<ContactFormState | null>(null);
   const [clientErrors, setClientErrors] = useState<ContactFieldErrors | null>(null);
   const handledState = useRef<ContactFormState>(IDLE_STATE);
   const formRef = useRef<HTMLFormElement>(null);
@@ -169,6 +174,9 @@ export const ContactForm = ({ action, copy, turnstileSiteKey }: ContactFormProps
   const challengeRef = useRef<HTMLDivElement>(null);
   const turnstilePhase = useRef<TurnstilePhase>('idle');
   const turnstileWidget = useRef<TurnstileWidget | null>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const wasShowingSuccess = useRef<boolean>(false);
   const turnstileToken = useRef<string>('');
   const tokenWaiters = useRef<Array<(token: string) => void>>([]);
 
@@ -322,6 +330,23 @@ export const ContactForm = ({ action, copy, turnstileSiteKey }: ContactFormProps
     }
   }, [state]);
 
+  const showSuccess: boolean = state.status === 'sent' && state !== dismissed;
+
+  useEffect(() => {
+    if (showSuccess) {
+      headingRef.current?.focus();
+    } else if (wasShowingSuccess.current) {
+      nameRef.current?.focus();
+    }
+
+    wasShowingSuccess.current = showSuccess;
+  }, [showSuccess]);
+
+  const sendAnother = (event: MouseEvent<HTMLAnchorElement>): void => {
+    event.preventDefault();
+    setDismissed(state);
+  };
+
   const warmSchema = (): void => {
     void loadValidator();
     startTurnstile();
@@ -391,85 +416,118 @@ export const ContactForm = ({ action, copy, turnstileSiteKey }: ContactFormProps
 
   const status: string = statusText(state, clientErrors !== null, copy);
 
+  const statusTone: string = status === '' || showSuccess ? '' : ' status-error';
+
   return (
-    <form
-      ref={formRef}
-      action={formAction}
-      onSubmit={handleSubmit}
-      onFocus={warmSchema}
-      onInput={warmSchema}
-      noValidate
-      data-contact-form=""
-    >
-      <input type="hidden" name="startedAt" value={startedAt} />
+    <>
+      <form
+        ref={formRef}
+        hidden={showSuccess}
+        action={formAction}
+        onSubmit={handleSubmit}
+        onFocus={warmSchema}
+        onInput={warmSchema}
+        noValidate
+        data-contact-form=""
+      >
+        <input type="hidden" name="startedAt" value={startedAt} />
 
-      <div className="row2">
-        <div className="field" data-motion="item">
-          <label htmlFor="f-name">{copy.labels.name}</label>
+        <div className="row2">
+          <div className="field" data-motion="item">
+            <label htmlFor="f-name">{copy.labels.name}</label>
 
-          <input
-            id="f-name"
-            name="name"
-            autoComplete="name"
-            maxLength={CONTACT_LIMITS.name}
-            {...describe('name')}
-          />
+            <input
+              id="f-name"
+              ref={nameRef}
+              name="name"
+              autoComplete="name"
+              maxLength={CONTACT_LIMITS.name}
+              {...describe('name')}
+            />
 
-          <span className="err" id="e-name">
-            {shownErrors.name ?? ''}
-          </span>
+            <span className="err" id="e-name">
+              {shownErrors.name ?? ''}
+            </span>
+          </div>
+
+          <div className="field" data-motion="item">
+            <label htmlFor="f-email">{copy.labels.email}</label>
+
+            <input
+              id="f-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              maxLength={CONTACT_LIMITS.email}
+              {...describe('email')}
+            />
+
+            <span className="err" id="e-email">
+              {shownErrors.email ?? ''}
+            </span>
+          </div>
         </div>
 
         <div className="field" data-motion="item">
-          <label htmlFor="f-email">{copy.labels.email}</label>
+          <label htmlFor="f-message">{copy.labels.message}</label>
 
-          <input
-            id="f-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            maxLength={CONTACT_LIMITS.email}
-            {...describe('email')}
+          <textarea
+            id="f-message"
+            name="message"
+            maxLength={CONTACT_LIMITS.message}
+            {...describe('message')}
           />
 
-          <span className="err" id="e-email">
-            {shownErrors.email ?? ''}
+          <span className="err" id="e-message">
+            {shownErrors.message ?? ''}
           </span>
         </div>
-      </div>
 
-      <div className="field" data-motion="item">
-        <label htmlFor="f-message">{copy.labels.message}</label>
+        <div className="hp" aria-hidden="true">
+          <label htmlFor="f-website">{copy.labels.website}</label>
 
-        <textarea
-          id="f-message"
-          name="message"
-          maxLength={CONTACT_LIMITS.message}
-          {...describe('message')}
-        />
+          <input id="f-website" name="website" tabIndex={-1} autoComplete="off" />
+        </div>
 
-        <span className="err" id="e-message">
-          {shownErrors.message ?? ''}
-        </span>
-      </div>
+        <div data-motion="item">
+          <button type="submit" className="btn btn-signal pixel" data-magnet="" disabled={pending}>
+            {pending ? copy.sending : copy.submit}
+          </button>
+        </div>
 
-      <div className="hp" aria-hidden="true">
-        <label htmlFor="f-website">{copy.labels.website}</label>
+        <div ref={challengeRef} data-turnstile="" />
+      </form>
 
-        <input id="f-website" name="website" tabIndex={-1} autoComplete="off" />
-      </div>
+      {showSuccess ? (
+        <div className="sent" data-contact-sent="">
+          <svg
+            className="sent-mark"
+            viewBox="0 0 8 8"
+            aria-hidden="true"
+            shapeRendering="crispEdges"
+          >
+            <path d="M0 4h1v1h1v1h1V5h1V4h1V3h1V2h1V1h1v1H7v1H6v1H5v1H4v1H3v1H2V6H1V5H0z" />
+          </svg>
 
-      <div data-motion="item">
-        <button type="submit" className="btn btn-signal pixel" data-magnet="" disabled={pending}>
-          {pending ? copy.sending : copy.submit}
-        </button>
-      </div>
+          <h3 ref={headingRef} tabIndex={-1} className="sent-title">
+            {copy.success.title}
+          </h3>
 
-      <div ref={challengeRef} data-turnstile="" />
+          <p className="sent-text">{copy.success.text}</p>
 
-      <p className="status" id="status" role="status">
+          <a
+            href={SEND_ANOTHER_HREF}
+            className="btn btn-plain pixel no-underline"
+            onClick={sendAnother}
+          >
+            {copy.success.again}
+          </a>
+        </div>
+      ) : null}
+
+      <p className={showSuccess ? 'sr-only' : `status${statusTone}`} id="status" role="status">
         {status}
       </p>
-    </form>
+    </>
   );
 };

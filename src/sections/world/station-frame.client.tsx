@@ -34,7 +34,7 @@ export const StationFrame = ({ station, takeOff, children }: StationFrameProps) 
       aria-labelledby={`${station}-title`}
       data-docked={docked ? '' : undefined}
       inert={inWorld && !docked}
-      className="relative pixel-edge"
+      className="relative pixel-edge text-layout:scroll-mt-24"
     >
       <span
         data-motion="wipe"

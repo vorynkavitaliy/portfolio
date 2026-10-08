@@ -272,13 +272,13 @@ export const RUNTIME_CASES = [
     id: 'controller.dock.store',
     source: 'spec',
     reference: 'spec FR-022 (docking opens the station panel); plan D-7',
-    expected: 'docked 2 → flight docked marketplace-chat, visited [marketplace-chat]',
+    expected: 'docked 2 → flight docked frontend, visited [frontend]',
   },
   {
     id: 'controller.dock.track-once',
     source: 'spec',
     reference: 'spec FR-054, SC-019 (station_docked with id, once per action)',
-    expected: 'one station_docked event with station marketplace-chat',
+    expected: 'one station_docked event with station frontend',
   },
   {
     id: 'controller.dock.effects',

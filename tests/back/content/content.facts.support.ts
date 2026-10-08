@@ -96,7 +96,7 @@ export const ALL_STRINGS: readonly CopyString[] = [
   ...collectStrings('site', SITE_COPY),
 ];
 
-export const LLM_PRODUCT_STRINGS: readonly CopyString[] = collectStrings(
-  'stations.llm-product',
-  STATIONS_COPY['llm-product'],
+export const FULL_CYCLE_STRINGS: readonly CopyString[] = collectStrings(
+  'stations.full-cycle',
+  STATIONS_COPY['full-cycle'],
 );

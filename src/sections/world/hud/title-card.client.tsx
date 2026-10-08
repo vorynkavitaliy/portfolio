@@ -51,19 +51,21 @@ export const TitleCard = (): ReactNode => {
       data-title-card=""
       className="pointer-events-none fixed inset-0 z-30 flex flex-col items-center justify-center gap-3 px-6 text-center opacity-0"
     >
-      <p ref={tagRef} className="m-0 font-pixel text-[1rem] text-signal">
-        {fillTemplate(WORLD_COPY.titleCard, { tag: STATIONS_COPY[shown].tag })}
-      </p>
+      <div className="flex max-w-full flex-col items-center gap-3 border-2 border-signal bg-ink/85 px-6 py-5 backdrop-blur-md">
+        <p ref={tagRef} className="m-0 font-pixel text-[1rem] text-signal">
+          {fillTemplate(WORLD_COPY.titleCard, { tag: STATIONS_COPY[shown].tag })}
+        </p>
 
-      <span ref={lineRef} className="block h-0.5 w-40 origin-left bg-signal" />
+        <span ref={lineRef} className="block h-0.5 w-40 origin-left bg-signal" />
 
-      <p
-        key={shown}
-        ref={titleRef}
-        className="m-0 overflow-hidden font-pixel text-5xl text-white [text-shadow:0_3px_0_var(--color-shadow)] wide:text-7xl"
-      >
-        {STATIONS_COPY[shown].label}
-      </p>
+        <p
+          key={shown}
+          ref={titleRef}
+          className="m-0 overflow-hidden font-pixel text-5xl text-white [text-shadow:0_3px_0_var(--color-shadow)] wide:text-7xl"
+        >
+          {STATIONS_COPY[shown].label}
+        </p>
+      </div>
     </div>
   );
 };

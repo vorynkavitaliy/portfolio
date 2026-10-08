@@ -4,7 +4,13 @@ import { expect, test } from 'vitest';
 
 import { CONTENT_FACTS_CASES } from '@tests/back/content/content.facts.cases';
 
-const ALLOWED_SOURCES: readonly string[] = ['spec', 'facts', 'owner-2026-10-07', 'security-md'];
+const ALLOWED_SOURCES: readonly string[] = [
+  'spec',
+  'facts',
+  'owner-2026-10-07',
+  'owner-2026-10-08',
+  'security-md',
+];
 
 const TEST_FILE = 'tests/back/content/content.facts.test.ts';
 

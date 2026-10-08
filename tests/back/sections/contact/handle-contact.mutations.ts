@@ -105,8 +105,8 @@ export const HANDLE_CONTACT_MUTATIONS: readonly HandleContactMutation[] = [
   {
     id: 'send-failed.as-sent',
     file: HANDLE,
-    find: 'return result.ok\n',
-    replace: 'return result.ok || !result.ok\n',
+    find: '  if (!result.ok) {\n',
+    replace: '  if (!result.ok && false) {\n',
     caseIds: ['sec.contact.send-failed'],
   },
   {
@@ -242,6 +242,76 @@ export const HANDLE_CONTACT_MUTATIONS: readonly HandleContactMutation[] = [
     file: ACTION,
     find: '    verify: verifyTurnstile,',
     replace: '    verify: async () => {\n      return { ok: true };\n    },',
+    caseIds: ['sec.contact.action-wiring'],
+  },
+  {
+    id: 'autoreply.removed',
+    file: HANDLE,
+    find: '  deps.defer(() => {\n    return deps.autoReply(email);\n  });\n\n',
+    replace: '',
+    caseIds: [
+      'sec.contact.autoreply-sent',
+      'sec.contact.autoreply-no-visitor-text',
+      'sec.contact.action-wiring',
+    ],
+  },
+  {
+    id: 'autoreply.before-owner-mail',
+    file: HANDLE,
+    find: '  const result: MailResult = await deps.send({ name, email, message });',
+    replace:
+      '  await deps.autoReply(email);\n  const result: MailResult = await deps.send({ name, email, message });',
+    caseIds: ['sec.contact.autoreply-sent', 'sec.contact.autoreply-skipped'],
+  },
+  {
+    id: 'autoreply.text-passed',
+    file: HANDLE,
+    find: '    return deps.autoReply(email);',
+    replace: '    return deps.autoReply(email, name, message);',
+    caseIds: ['sec.contact.autoreply-no-visitor-text'],
+  },
+  {
+    id: 'autoreply.bots-answered',
+    file: HANDLE,
+    find: "  if (isBotSubmission(raw, deps.now)) {\n    return { status: 'sent' };",
+    replace:
+      "  if (isBotSubmission(raw, deps.now)) {\n    await deps.autoReply(raw.email);\n\n    return { status: 'sent' };",
+    caseIds: ['sec.contact.autoreply-skipped'],
+  },
+  {
+    id: 'autoreply.on-send-failure',
+    file: HANDLE,
+    find: '  if (!result.ok) {\n    return',
+    replace: '  if (!result.ok) {\n    await deps.autoReply(email);\n\n    return',
+    caseIds: ['sec.contact.autoreply-skipped'],
+  },
+  {
+    id: 'autoreply.failure-surfaces',
+    file: HANDLE,
+    find: '  deps.defer(() => {\n    return deps.autoReply(email);\n  });\n',
+    replace:
+      "  const reply = await deps.autoReply(email);\n\n  if (!reply.ok) {\n    return { status: 'error', code: 'SEND_FAILED', fieldErrors: null };\n  }\n",
+    caseIds: ['sec.contact.autoreply-failed'],
+  },
+  {
+    id: 'autoreply.action-unwired',
+    file: ACTION,
+    find: '    autoReply: sendAutoReply,',
+    replace: '    autoReply: async () => {\n      return { ok: true };\n    },',
+    caseIds: ['sec.contact.action-wiring'],
+  },
+  {
+    id: 'autoreply.awaited-inline',
+    file: HANDLE,
+    find: '  deps.defer(() => {\n    return deps.autoReply(email);\n  });\n',
+    replace: '  await deps.autoReply(email);\n',
+    caseIds: ['sec.contact.autoreply-deferred'],
+  },
+  {
+    id: 'autoreply.action-not-deferred',
+    file: ACTION,
+    find: '    defer: after,',
+    replace: '    defer: (task) => {\n      void task();\n    },',
     caseIds: ['sec.contact.action-wiring'],
   },
 ];

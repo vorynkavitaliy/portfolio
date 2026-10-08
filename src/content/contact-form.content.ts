@@ -12,6 +12,11 @@ export const CONTACT_FORM_COPY: ContactFormCopy = {
     emailTooLong: 'That email is too long. Check the address.',
     messageTooLong: 'That message is too long. Shorten it.',
   },
+  success: {
+    title: 'Message sent',
+    text: 'Thanks. The reply comes to the email you entered.',
+    again: 'Send another message',
+  },
   status: {
     invalid: 'Message not sent. Check the marked fields.',
     sent: 'Message sent. A reply comes by email.',

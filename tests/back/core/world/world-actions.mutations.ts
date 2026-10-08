@@ -17,8 +17,8 @@ export const WORLD_ACTIONS_MUTATIONS: readonly WorldActionsMutation[] = [
   {
     id: 'stations.swap-order',
     file: STATIONS,
-    find: "  'llm-product',\n  'marketplace-chat',",
-    replace: "  'marketplace-chat',\n  'llm-product',",
+    find: "  'full-cycle',\n  'frontend',",
+    replace: "  'frontend',\n  'full-cycle',",
     caseIds: ['world.stations.order'],
   },
   {

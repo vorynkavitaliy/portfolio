@@ -1,11 +1,11 @@
 export const STATION_IDS = [
   'home-base',
-  'llm-product',
-  'marketplace-chat',
-  'admin-app',
-  'ai-engineering',
+  'full-cycle',
+  'frontend',
+  'backend',
+  'ai',
+  'deploy',
   'systems',
-  'flight-log',
   'this-world',
   'contact',
 ] as const;

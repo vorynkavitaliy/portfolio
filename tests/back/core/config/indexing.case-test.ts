@@ -1,9 +1,9 @@
 import { test } from 'vitest';
 
-import type { CvUrlCaseId } from '@tests/back/core/config/cv-url.cases';
+import type { IndexingCaseId } from '@tests/back/core/config/indexing.cases';
 
 export const caseTest = (
-  id: CvUrlCaseId,
+  id: IndexingCaseId,
   description: string,
   run: () => Promise<void> | void,
 ): void => {

@@ -1,4 +1,5 @@
-export type MailCaseSource = 'security-md' | 'spec' | 'nodemailer-docs' | 'owner-2026-10-07';
+export type MailCaseSource =
+  'security-md' | 'spec' | 'nodemailer-docs' | 'owner-2026-10-07' | 'owner-2026-10-08';
 
 export type MailCase = Readonly<{
   id: string;
@@ -120,6 +121,13 @@ export const MAIL_CASES = [
     expected: 'tls is exactly { minVersion: TLSv1.2 } (no rejectUnauthorized override)',
   },
   {
+    id: 'sec.mail.timeouts',
+    source: 'owner-2026-10-08',
+    reference:
+      'owner 2026-10-08: the dev form hung on «Sending…» because the host blocks SMTP 465/587; a closed port must fail fast',
+    expected: 'connectionTimeout 10000, greetingTimeout 10000, socketTimeout 20000 (ms)',
+  },
+  {
     id: 'sec.mail.auth-and-host',
     source: 'security-md',
     reference: 'rules/security.md §2 «SMTP host, port, user, password … only in env»',
@@ -132,6 +140,46 @@ export const MAIL_CASES = [
       'contact-form stack «Transport lifetime: once per server instance (module scope, lazily)»',
     expected:
       'importing the module creates no transport; two sends create exactly one transport with transportOptions(env) and send two mails',
+  },
+  {
+    id: 'sec.mail.autoreply.envelope',
+    source: 'owner-2026-10-08',
+    reference:
+      'owner 2026-10-08: confirmation email to the visitor; rules/security.md §1 «Mail» (auto-reply) «from CONTACT_FROM, to the visitor, replyTo CONTACT_TO, fixed subject»',
+    expected:
+      'from site@example.test, to ann@example.test, replyTo owner@example.test, subject «Thanks, I got your message», one transport call',
+  },
+  {
+    id: 'sec.mail.autoreply.no-visitor-text',
+    source: 'owner-2026-10-08',
+    reference:
+      'owner 2026-10-08: confirmation email to the visitor; rules/security.md §1 «Mail» (auto-reply) «contains NO visitor-provided text»',
+    expected:
+      'for hostile visitor input the mail differs from the mail for another visitor only in the to field, and the visitor address appears nowhere but to',
+  },
+  {
+    id: 'sec.mail.autoreply.body',
+    source: 'owner-2026-10-08',
+    reference:
+      'owner 2026-10-08: confirmation email to the visitor; rules/security.md §1 «Mail» (auto-reply) «Hi, / Thanks for writing … just reply to this email. / Vitalii Vorynka / Full-stack Developer · AI Engineer / vorynka.dev»',
+    expected:
+      'text is «Hi,», the two body sentences and the three signature lines (no heading); html adds the heading «Message received» and carries the same copy, the #070a12 / #e4e8f0 / #a5adbf / #ffaa00 palette, tables and inline styles, and loads nothing external',
+  },
+  {
+    id: 'sec.mail.autoreply.failure',
+    source: 'owner-2026-10-08',
+    reference:
+      'owner 2026-10-08: confirmation email to the visitor; rules/security.md §1 «Mail» (auto-reply) «log contact.autoreply.failed <code> (code only, never the address)»',
+    expected:
+      'a failing transport logs exactly [contact.autoreply.failed, EAUTH] with no address or provider text and returns SEND_FAILED',
+  },
+  {
+    id: 'sec.mail.autoreply.shared-transport',
+    source: 'owner-2026-10-08',
+    reference:
+      'owner 2026-10-08: confirmation email to the visitor; rules/security.md §1 «Mail» (auto-reply); contact-form stack «Transport lifetime: once per server instance»',
+    expected:
+      'an owner mail and an auto-reply sent through the module create one transport and send two mails, the second to the visitor',
   },
 ] as const satisfies readonly MailCase[];
 

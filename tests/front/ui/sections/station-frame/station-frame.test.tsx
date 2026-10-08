@@ -131,7 +131,7 @@ caseTest('station-frame.world-docked', 'the docked panel is live', async () => {
 });
 
 caseTest('station-frame.docked-elsewhere', 'another station is docked', async () => {
-  setState(dockedAt('flight-log'));
+  setState(dockedAt('deploy'));
   await renderFrame();
 
   expect(sectionOf().inert).toBe(true);

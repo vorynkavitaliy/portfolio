@@ -5,7 +5,7 @@ import { expect, test } from 'vitest';
 import { STATIONS_CASES } from '@tests/front/ui/sections/stations/stations.cases';
 import source from '@tests/front/ui/sections/stations/stations.test.tsx?raw';
 
-const ALLOWED_SOURCES: readonly string[] = ['spec', 'prototype', 'content'];
+const ALLOWED_SOURCES: readonly string[] = ['spec', 'prototype', 'content', 'owner-2026-10-08'];
 
 test('every case id has a test and every test id exists in the catalogue', () => {
   const used: readonly string[] = [...source.matchAll(/caseTest\(\s*'([^']+)'/g)].map((match) => {

@@ -20,10 +20,6 @@ export const Systems = () => {
         {COPY.title}
       </h2>
 
-      <p data-motion="lede" className="mt-2.5 text-pretty text-muted">
-        {COPY.lede}
-      </p>
-
       <div className="mt-4 grid gap-3.5">
         {COPY.groups.map((group) => {
           return (

@@ -15,7 +15,11 @@ export const Contact = () => {
         {copy.tag}
       </p>
 
-      <h2 id="contact-title" data-motion="title">
+      <h2
+        id="contact-title"
+        data-motion="title"
+        className="m-0 font-pixel text-heading leading-display font-semibold text-balance text-white wide:text-heading-wide"
+      >
         {copy.title}
       </h2>
 
