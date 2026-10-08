@@ -50,8 +50,6 @@ export const contactSchema = z.object({
   startedAt: z.optional(z.string()),
 });
 
-export type ContactInput = z.infer<typeof contactSchema>;
-
 export type RawContactForm = Readonly<
   Record<'name' | 'email' | 'message' | 'website' | 'startedAt', string>
 >;

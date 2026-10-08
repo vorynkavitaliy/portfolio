@@ -42,18 +42,25 @@ test('motion.roll.revert-after-restore: reverting the timeline after the restore
 
 test('motion.roll.context-revert: a gsap context revert mid-roll leaves the real value', () => {
   const holder: TextHolder = { textContent: '20+' };
-  let timeline: gsap.core.Timeline | null = null;
+  const timelines: gsap.core.Timeline[] = [];
 
   const context = gsap.context(() => {
-    timeline = gsap.timeline({ paused: true });
+    const timeline: gsap.core.Timeline = gsap.timeline({ paused: true });
     const restore = addNumberRolls(timeline, [holder], PANEL_MOTION.numberRoll);
+
+    timelines.push(timeline);
 
     gsap.context(() => {
       return restore;
     });
   });
 
-  timeline?.time(MID_ROLL);
+  for (const timeline of timelines) {
+    timeline.time(MID_ROLL);
+  }
+
+  expect(holder.textContent).not.toBe('20+');
+
   context.revert();
 
   expect(holder.textContent).toBe('20+');

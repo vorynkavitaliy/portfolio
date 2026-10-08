@@ -8,6 +8,7 @@ const ALLOWED_SOURCES: readonly string[] = [
   'spec',
   'wcag',
   'playwright-docs',
+  'security-md',
   'owner-2026-10-07',
   'owner-2026-10-08',
 ];
